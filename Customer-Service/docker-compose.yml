@@ -1,0 +1,65 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: customer_service_db
+    environment:
+      POSTGRES_DB: core_bank
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - customer_service_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d core_bank"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Customer Service
+  customer-service:
+    build: .
+    container_name: customer_service_app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: core_bank
+      DB_SSL_MODE: disable
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+      APP_ENV: development
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - customer_service_network
+    restart: on-failure
+
+  # PgAdmin (optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: customer_service_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - customer_service_network
+
+volumes:
+  postgres_data:
+
+networks:
+  customer_service_network:
+    driver: bridge
