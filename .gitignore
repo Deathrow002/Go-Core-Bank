@@ -56,3 +56,9 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Build Files
+customer-service
+customer-service.exe
+main
+main.exe
