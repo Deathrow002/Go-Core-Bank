@@ -1,1497 +1,936 @@
 {
   "info": {
-    "name": "Core Banking Platform API",
-    "description": "Complete Core Banking Platform API Collection\n\nThis collection contains all endpoints for the Core Banking microservices platform, including Customer Service, Account Service, Transaction Service, Card Service, Loan Service, and Notification Service.",
-    "version": "2.0.0",
+    "name": "Go-Core-Bank API Collections",
+    "description": "Complete Core Banking Microservices API Collection\n\nThis collection contains all endpoints for the Go-Core-Bank platform including Customer Service, Account Service, Transaction Service, and other banking microservices.",
+    "version": "1.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:8080",
-      "type": "string"
+      "type": "string",
+      "description": "Base URL for Customer Service"
+    },
+    {
+      "key": "accountServiceUrl",
+      "value": "http://localhost:8081",
+      "type": "string",
+      "description": "Base URL for Account Service"
+    },
+    {
+      "key": "transactionServiceUrl",
+      "value": "http://localhost:8082",
+      "type": "string",
+      "description": "Base URL for Transaction Service"
     },
     {
       "key": "apiVersion",
       "value": "v1",
-      "type": "string"
+      "type": "string",
+      "description": "API Version"
     },
     {
-      "key": "authToken",
+      "key": "customerId",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Dynamic Customer ID for testing"
+    },
+    {
+      "key": "accountId",
+      "value": "",
+      "type": "string",
+      "description": "Dynamic Account ID for testing"
+    },
+    {
+      "key": "transactionId",
+      "value": "",
+      "type": "string",
+      "description": "Dynamic Transaction ID for testing"
     }
   ],
   "item": [
     {
-      "name": "System Health",
+      "name": "Customer-Service",
       "item": [
         {
-          "name": "Customer Service Health",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
-            },
-            "description": "Check the health status of the Customer Service"
-          }
+          "name": "Health Check",
+          "item": [
+            {
+              "name": "Customer Service Health",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "description": "Check the health status of the Customer Service"
+              },
+              "response": [
+                {
+                  "name": "Healthy Response",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/health",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "health"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"status\": \"healthy\",\n  \"service\": \"customer-service\",\n  \"version\": \"1.0.0\"\n}"
+                }
+              ]
+            }
+          ],
+          "description": "Health monitoring endpoints for Customer Service"
         },
         {
-          "name": "Account Service Health",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{accountServiceUrl}}/health",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["health"]
+          "name": "Customer Management",
+          "item": [
+            {
+              "name": "Create Customer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Test response status",
+                      "pm.test('Status code is 201', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "// Test response structure",
+                      "pm.test('Response has required fields', function () {",
+                      "    const responseJson = pm.response.json();",
+                      "    pm.expect(responseJson).to.have.property('id');",
+                      "    pm.expect(responseJson).to.have.property('first_name');",
+                      "    pm.expect(responseJson).to.have.property('last_name');",
+                      "    pm.expect(responseJson).to.have.property('email');",
+                      "    pm.expect(responseJson).to.have.property('status');",
+                      "});",
+                      "",
+                      "// Store customer ID for subsequent requests",
+                      "if (pm.response.code === 201) {",
+                      "    const responseJson = pm.response.json();",
+                      "    if (responseJson.id) {",
+                      "        pm.collectionVariables.set('customerId', responseJson.id);",
+                      "        console.log('Stored customer ID:', responseJson.id);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1-555-0123\",\n  \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Anytown\",\n    \"state\": \"CA\",\n    \"postal_code\": \"12345\",\n    \"country\": \"USA\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers"
+                  ]
+                },
+                "description": "Create a new customer with the provided information"
+              },
+              "response": [
+                {
+                  "name": "Success Response",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1-555-0123\",\n  \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Anytown\",\n    \"state\": \"CA\",\n    \"postal_code\": \"12345\",\n    \"country\": \"USA\"\n  }\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers"
+                      ]
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1-555-0123\",\n  \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Anytown\",\n    \"state\": \"CA\",\n    \"postal_code\": \"12345\",\n    \"country\": \"USA\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2025-01-17T10:30:00Z\",\n  \"updated_at\": \"2025-01-17T10:30:00Z\"\n}"
+                },
+                {
+                  "name": "Validation Error",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"first_name\": \"\",\n  \"email\": \"invalid-email\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"error\": \"Invalid request body\",\n  \"message\": \"validation error details\"\n}"
+                }
+              ]
             },
-            "description": "Check the health status of the Account Service"
-          }
+            {
+              "name": "Create Customer - Alternative Date Formats",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Test response status",
+                      "pm.test('Status code is 201', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "// Store customer ID for subsequent requests",
+                      "if (pm.response.code === 201) {",
+                      "    const responseJson = pm.response.json();",
+                      "    if (responseJson.id) {",
+                      "        pm.collectionVariables.set('customerId', responseJson.id);",
+                      "        console.log('Stored customer ID:', responseJson.id);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"phone\": \"+1-555-0124\",\n  \"date_of_birth\": \"1985-05-20T12:00:00Z\",\n  \"address\": {\n    \"street\": \"456 Oak Ave\",\n    \"city\": \"Newtown\",\n    \"state\": \"NY\",\n    \"postal_code\": \"67890\",\n    \"country\": \"USA\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers"
+                  ]
+                },
+                "description": "Create customer with full RFC3339 timestamp format and structured address"
+              }
+            },
+            {
+              "name": "Create Customer - Minimal Address",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Test response status",
+                      "pm.test('Status code is 201', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "// Store customer ID for subsequent requests",
+                      "if (pm.response.code === 201) {",
+                      "    const responseJson = pm.response.json();",
+                      "    if (responseJson.id) {",
+                      "        pm.collectionVariables.set('customerId', responseJson.id);",
+                      "        console.log('Stored customer ID:', responseJson.id);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Mike\",\n  \"last_name\": \"Johnson\",\n  \"email\": \"mike.johnson@example.com\",\n  \"phone\": \"+1-555-0125\",\n  \"date_of_birth\": \"1992-11-30T00:00:00Z\",\n  \"address\": {\n    \"street\": \"789 Pine St\",\n    \"city\": \"Springfield\",\n    \"state\": \"\",\n    \"postal_code\": \"\",\n    \"country\": \"USA\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers"
+                  ]
+                },
+                "description": "Create customer with minimal address information (some fields empty)"
+              }
+            },
+            {
+              "name": "Get Customer by ID",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Customer data is valid', function () {",
+                      "    const responseJson = pm.response.json();",
+                      "    pm.expect(responseJson).to.have.property('id');",
+                      "    pm.expect(responseJson).to.have.property('first_name');",
+                      "    pm.expect(responseJson).to.have.property('last_name');",
+                      "    pm.expect(responseJson).to.have.property('email');",
+                      "    pm.expect(responseJson).to.have.property('address');",
+                      "    pm.expect(responseJson.address).to.have.property('street');",
+                      "    pm.expect(responseJson.address).to.have.property('city');",
+                      "    pm.expect(responseJson.status).to.be.oneOf(['active', 'inactive', 'suspended', 'closed']);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers",
+                    "{{customerId}}"
+                  ]
+                },
+                "description": "Retrieve a customer's information by their UUID"
+              },
+              "response": [
+                {
+                  "name": "Success Response",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/550e8400-e29b-41d4-a716-446655440000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers",
+                        "550e8400-e29b-41d4-a716-446655440000"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1-555-0123\",\n  \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Anytown\",\n    \"state\": \"CA\",\n    \"postal_code\": \"12345\",\n    \"country\": \"USA\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2025-01-17T10:30:00Z\",\n  \"updated_at\": \"2025-01-17T10:30:00Z\"\n}"
+                },
+                {
+                  "name": "Customer Not Found",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/00000000-0000-0000-0000-000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers",
+                        "00000000-0000-0000-0000-000000000000"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"error\": \"Customer not found\",\n  \"message\": \"customer with id 00000000-0000-0000-0000-000000000000 not found\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Customer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Updated customer data is valid', function () {",
+                      "    const responseJson = pm.response.json();",
+                      "    pm.expect(responseJson).to.have.property('id');",
+                      "    pm.expect(responseJson).to.have.property('updated_at');",
+                      "    pm.expect(responseJson.updated_at).to.not.equal(responseJson.created_at);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"phone\": \"+1-555-0124\",\n  \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n  \"address\": {\n    \"street\": \"456 Oak Ave\",\n    \"city\": \"Newtown\",\n    \"state\": \"NY\",\n    \"postal_code\": \"67890\",\n    \"country\": \"USA\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers",
+                    "{{customerId}}"
+                  ]
+                },
+                "description": "Update an existing customer's information"
+              },
+              "response": [
+                {
+                  "name": "Success Response",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"phone\": \"+1-555-0124\",\n  \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n  \"address\": {\n    \"street\": \"456 Oak Ave\",\n    \"city\": \"Newtown\",\n    \"state\": \"NY\",\n    \"postal_code\": \"67890\",\n    \"country\": \"USA\"\n  }\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/550e8400-e29b-41d4-a716-446655440000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers",
+                        "550e8400-e29b-41d4-a716-446655440000"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"phone\": \"+1-555-0124\",\n  \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n  \"address\": {\n    \"street\": \"456 Oak Ave\",\n    \"city\": \"Newtown\",\n    \"state\": \"NY\",\n    \"postal_code\": \"67890\",\n    \"country\": \"USA\"\n  },\n  \"status\": \"active\",\n  \"created_at\": \"2025-01-17T10:30:00Z\",\n  \"updated_at\": \"2025-01-17T11:45:00Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Delete Customer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 204', function () {",
+                      "    pm.response.to.have.status(204);",
+                      "});",
+                      "",
+                      "pm.test('Response body is empty', function () {",
+                      "    pm.expect(pm.response.text()).to.be.empty;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers",
+                    "{{customerId}}"
+                  ]
+                },
+                "description": "Delete a customer by their UUID (soft delete)"
+              },
+              "response": [
+                {
+                  "name": "Success Response",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/550e8400-e29b-41d4-a716-446655440000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers",
+                        "550e8400-e29b-41d4-a716-446655440000"
+                      ]
+                    }
+                  },
+                  "status": "No Content",
+                  "code": 204,
+                  "_postman_previewlanguage": null,
+                  "header": [],
+                  "cookie": [],
+                  "body": null
+                }
+              ]
+            }
+          ],
+          "description": "CRUD operations for customer management based on CustomerController methods"
         },
         {
-          "name": "Transaction Service Health",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{transactionServiceUrl}}/health",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["health"]
+          "name": "Customer Query",
+          "item": [
+            {
+              "name": "List Customers",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has pagination', function () {",
+                      "    const responseJson = pm.response.json();",
+                      "    pm.expect(responseJson).to.have.property('customers');",
+                      "    pm.expect(responseJson).to.have.property('total');",
+                      "    pm.expect(responseJson).to.have.property('page');",
+                      "    pm.expect(responseJson).to.have.property('page_size');",
+                      "    pm.expect(responseJson).to.have.property('total_pages');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers?page=1&page_size=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Page number (default: 1)"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "10",
+                      "description": "Number of items per page (default: 10)"
+                    }
+                  ]
+                },
+                "description": "Get a paginated list of customers with pagination support"
+              },
+              "response": [
+                {
+                  "name": "Success Response",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers?page=1&page_size=10",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers"
+                      ],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "page_size",
+                          "value": "10"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"customers\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"first_name\": \"John\",\n      \"last_name\": \"Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"phone\": \"+1-555-0123\",\n      \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n      \"address\": {\n        \"street\": \"123 Main St\",\n        \"city\": \"Anytown\",\n        \"state\": \"CA\",\n        \"postal_code\": \"12345\",\n        \"country\": \"USA\"\n      },\n      \"status\": \"active\",\n      \"created_at\": \"2025-01-17T10:30:00Z\",\n      \"updated_at\": \"2025-01-17T10:30:00Z\"\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10,\n  \"total_pages\": 1\n}"
+                }
+              ]
             },
-            "description": "Check the health status of the Transaction Service"
-          }
-        },
-        {
-          "name": "Platform Status",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "status"]
-            },
-            "description": "Check overall platform health status"
-          }
+            {
+              "name": "Search Customers",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Search results are valid', function () {",
+                      "    const responseJson = pm.response.json();",
+                      "    pm.expect(responseJson).to.have.property('customers');",
+                      "    pm.expect(responseJson).to.have.property('total');",
+                      "    pm.expect(Array.isArray(responseJson.customers)).to.be.true;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/search?query=john&status=active&page=1&page_size=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "{{apiVersion}}",
+                    "customers",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "query",
+                      "value": "john",
+                      "description": "Search query (searches in name, email)"
+                    },
+                    {
+                      "key": "status",
+                      "value": "active",
+                      "description": "Customer status filter (active, inactive, suspended, closed)"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Page number (default: 1)"
+                    },
+                    {
+                      "key": "page_size",
+                      "value": "10",
+                      "description": "Number of items per page (default: 10)"
+                    }
+                  ]
+                },
+                "description": "Search customers by query, status, and other criteria with pagination"
+              },
+              "response": [
+                {
+                  "name": "Success Response",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/search?query=john&status=active&page=1&page_size=10",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "{{apiVersion}}",
+                        "customers",
+                        "search"
+                      ],
+                      "query": [
+                        {
+                          "key": "query",
+                          "value": "john"
+                        },
+                        {
+                          "key": "status",
+                          "value": "active"
+                        },
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "page_size",
+                          "value": "10"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"customers\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"first_name\": \"John\",\n      \"last_name\": \"Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"phone\": \"+1-555-0123\",\n      \"date_of_birth\": \"1990-01-15T00:00:00Z\",\n      \"address\": {\n        \"street\": \"123 Main St\",\n        \"city\": \"Anytown\",\n        \"state\": \"CA\",\n        \"postal_code\": \"12345\",\n        \"country\": \"USA\"\n      },\n      \"status\": \"active\",\n      \"created_at\": \"2025-01-17T10:30:00Z\",\n      \"updated_at\": \"2025-01-17T10:30:00Z\"\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10,\n  \"total_pages\": 1\n}"
+                }
+              ]
+            }
+          ],
+          "description": "Query operations for listing and searching customers based on CustomerController methods"
         }
       ],
-      "description": "Health monitoring for all banking services"
+      "description": "Complete Customer Service API endpoints following the Go-Core-Bank CustomerController implementation",
+      "variable": [
+        {
+          "key": "servicePort",
+          "value": "8080",
+          "type": "string"
+        }
+      ]
     },
     {
-      "name": "Authentication & Authorization",
+      "name": "Future Services",
       "item": [
         {
-          "name": "User Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"admin@corebank.com\",\n  \"password\": \"SecurePassword123!\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "auth", "login"]
-            },
-            "description": "Authenticate user and obtain access token"
-          },
-          "event": [
+          "name": "Account-Service (Coming Soon)",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    pm.collectionVariables.set('authToken', response.access_token);",
-                  "}"
-                ]
+              "name": "Account Service Health",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{accountServiceUrl}}/health",
+                  "host": [
+                    "{{accountServiceUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "description": "Health check for Account Service (Port 8081)"
               }
             }
-          ]
+          ],
+          "description": "Future Account Service endpoints"
         },
         {
-          "name": "User Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
+          "name": "Transaction-Service (Coming Soon)",
+          "item": [
+            {
+              "name": "Transaction Service Health",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{transactionServiceUrl}}/health",
+                  "host": [
+                    "{{transactionServiceUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "description": "Health check for Transaction Service (Port 8082)"
               }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "auth", "logout"]
-            },
-            "description": "Logout user and invalidate token"
-          }
-        },
-        {
-          "name": "Refresh Token",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refreshToken}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/refresh",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "auth", "refresh"]
-            },
-            "description": "Refresh access token"
-          }
+            }
+          ],
+          "description": "Future Transaction Service endpoints"
         }
       ],
-      "description": "Authentication and authorization endpoints"
-    },
-    {
-      "name": "Customer Management",
-      "item": [
-        {
-          "name": "Create Customer",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1-555-0123\",\n  \"date_of_birth\": \"1990-01-15\",\n  \"address\": \"123 Main St, Anytown, USA\",\n  \"identity_document\": {\n    \"type\": \"passport\",\n    \"number\": \"A12345678\",\n    \"country\": \"USA\",\n    \"expiry_date\": \"2030-12-31\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/customers",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers"]
-            },
-            "description": "Create a new customer with KYC information"
-          }
-        },
-        {
-          "name": "Get Customer by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}"]
-            },
-            "description": "Retrieve customer information by UUID"
-          }
-        },
-        {
-          "name": "Update Customer",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"phone\": \"+1-555-0124\",\n  \"address\": \"456 Oak Ave, Newtown, USA\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}"]
-            },
-            "description": "Update customer information"
-          }
-        },
-        {
-          "name": "Delete Customer",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}"]
-            },
-            "description": "Delete customer record"
-          }
-        },
-        {
-          "name": "List Customers",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/customers?page=1&page_size=10&status=active",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "page_size",
-                  "value": "10"
-                },
-                {
-                  "key": "status",
-                  "value": "active"
-                }
-              ]
-            },
-            "description": "Get paginated list of customers"
-          }
-        },
-        {
-          "name": "Search Customers",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/search?query=john&status=active",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "search"],
-              "query": [
-                {
-                  "key": "query",
-                  "value": "john"
-                },
-                {
-                  "key": "status",
-                  "value": "active"
-                }
-              ]
-            },
-            "description": "Search customers with filters"
-          }
-        },
-        {
-          "name": "Customer KYC Verification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"verification_type\": \"identity\",\n  \"documents\": [\n    {\n      \"type\": \"passport\",\n      \"file_url\": \"https://storage.example.com/docs/passport.jpg\"\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}/kyc",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}", "kyc"]
-            },
-            "description": "Submit KYC documents for verification"
-          }
-        }
-      ],
-      "description": "Customer management operations"
-    },
-    {
-      "name": "Account Management",
-      "item": [
-        {
-          "name": "Create Account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"account_type\": \"savings\",\n  \"currency\": \"USD\",\n  \"initial_deposit\": 1000.00,\n  \"account_name\": \"John Doe Savings Account\"\n}"
-            },
-            "url": {
-              "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accounts"]
-            },
-            "description": "Create a new bank account"
-          }
-        },
-        {
-          "name": "Get Account by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts/{{accountId}}",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accounts", "{{accountId}}"]
-            },
-            "description": "Get account details by ID"
-          }
-        },
-        {
-          "name": "Get Account Balance",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts/{{accountId}}/balance",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accounts", "{{accountId}}", "balance"]
-            },
-            "description": "Get current account balance"
-          }
-        },
-        {
-          "name": "Get Account Statement",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts/{{accountId}}/statement?from_date=2025-01-01&to_date=2025-01-31",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accounts", "{{accountId}}", "statement"],
-              "query": [
-                {
-                  "key": "from_date",
-                  "value": "2025-01-01"
-                },
-                {
-                  "key": "to_date",
-                  "value": "2025-01-31"
-                }
-              ]
-            },
-            "description": "Get account statement for date range"
-          }
-        },
-        {
-          "name": "List Customer Accounts",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/customers/{{customerId}}/accounts",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}", "accounts"]
-            },
-            "description": "Get all accounts for a customer"
-          }
-        },
-        {
-          "name": "Freeze Account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Suspicious activity detected\",\n  \"freeze_type\": \"partial\"\n}"
-            },
-            "url": {
-              "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts/{{accountId}}/freeze",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accounts", "{{accountId}}", "freeze"]
-            },
-            "description": "Freeze account for security reasons"
-          }
-        },
-        {
-          "name": "Unfreeze Account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts/{{accountId}}/unfreeze",
-              "host": ["{{accountServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accounts", "{{accountId}}", "unfreeze"]
-            },
-            "description": "Unfreeze previously frozen account"
-          }
-        }
-      ],
-      "description": "Bank account management operations"
-    },
-    {
-      "name": "Transaction Management",
-      "item": [
-        {
-          "name": "Create Transfer",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"from_account_id\": \"{{accountId}}\",\n  \"to_account_id\": \"{{toAccountId}}\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"description\": \"Transfer to savings\",\n  \"reference\": \"TXN-{{$randomUUID}}\"\n}"
-            },
-            "url": {
-              "raw": "{{transactionServiceUrl}}/api/{{apiVersion}}/transactions/transfer",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "transactions", "transfer"]
-            },
-            "description": "Create a money transfer between accounts"
-          }
-        },
-        {
-          "name": "Create Deposit",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"account_id\": \"{{accountId}}\",\n  \"amount\": 1000.00,\n  \"currency\": \"USD\",\n  \"description\": \"Cash deposit\",\n  \"deposit_method\": \"cash\"\n}"
-            },
-            "url": {
-              "raw": "{{transactionServiceUrl}}/api/{{apiVersion}}/transactions/deposit",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "transactions", "deposit"]
-            },
-            "description": "Create a deposit transaction"
-          }
-        },
-        {
-          "name": "Create Withdrawal",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"account_id\": \"{{accountId}}\",\n  \"amount\": 200.00,\n  \"currency\": \"USD\",\n  \"description\": \"ATM withdrawal\",\n  \"withdrawal_method\": \"atm\"\n}"
-            },
-            "url": {
-              "raw": "{{transactionServiceUrl}}/api/{{apiVersion}}/transactions/withdrawal",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "transactions", "withdrawal"]
-            },
-            "description": "Create a withdrawal transaction"
-          }
-        },
-        {
-          "name": "Get Transaction by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{transactionServiceUrl}}/api/{{apiVersion}}/transactions/{{transactionId}}",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "transactions", "{{transactionId}}"]
-            },
-            "description": "Get transaction details by ID"
-          }
-        },
-        {
-          "name": "List Account Transactions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{transactionServiceUrl}}/api/{{apiVersion}}/accounts/{{accountId}}/transactions?page=1&page_size=20&type=all",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "accounts", "{{accountId}}", "transactions"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "page_size",
-                  "value": "20"
-                },
-                {
-                  "key": "type",
-                  "value": "all"
-                }
-              ]
-            },
-            "description": "Get transaction history for an account"
-          }
-        },
-        {
-          "name": "Search Transactions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{transactionServiceUrl}}/api/{{apiVersion}}/transactions/search?account_id={{accountId}}&from_date=2025-01-01&to_date=2025-01-31&min_amount=100",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "transactions", "search"],
-              "query": [
-                {
-                  "key": "account_id",
-                  "value": "{{accountId}}"
-                },
-                {
-                  "key": "from_date",
-                  "value": "2025-01-01"
-                },
-                {
-                  "key": "to_date",
-                  "value": "2025-01-31"
-                },
-                {
-                  "key": "min_amount",
-                  "value": "100"
-                }
-              ]
-            },
-            "description": "Search transactions with filters"
-          }
-        },
-        {
-          "name": "Reverse Transaction",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Fraudulent transaction\",\n  \"authorized_by\": \"manager@corebank.com\"\n}"
-            },
-            "url": {
-              "raw": "{{transactionServiceUrl}}/api/{{apiVersion}}/transactions/{{transactionId}}/reverse",
-              "host": ["{{transactionServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "transactions", "{{transactionId}}", "reverse"]
-            },
-            "description": "Reverse a completed transaction"
-          }
-        }
-      ],
-      "description": "Transaction processing and management"
-    },
-    {
-      "name": "Card Management",
-      "item": [
-        {
-          "name": "Create Debit Card",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"account_id\": \"{{accountId}}\",\n  \"card_type\": \"debit\",\n  \"card_brand\": \"visa\",\n  \"delivery_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Anytown\",\n    \"state\": \"CA\",\n    \"zip_code\": \"12345\",\n    \"country\": \"USA\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards"]
-            },
-            "description": "Issue a new debit card"
-          }
-        },
-        {
-          "name": "Create Credit Card",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"card_type\": \"credit\",\n  \"card_brand\": \"mastercard\",\n  \"credit_limit\": 5000.00,\n  \"apr\": 18.99,\n  \"delivery_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Anytown\",\n    \"state\": \"CA\",\n    \"zip_code\": \"12345\",\n    \"country\": \"USA\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards"]
-            },
-            "description": "Issue a new credit card"
-          }
-        },
-        {
-          "name": "Get Card Details",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards/{{cardId}}",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards", "{{cardId}}"]
-            },
-            "description": "Get card information by ID"
-          }
-        },
-        {
-          "name": "Activate Card",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"cvv\": \"123\",\n  \"pin\": \"1234\"\n}"
-            },
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards/{{cardId}}/activate",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards", "{{cardId}}", "activate"]
-            },
-            "description": "Activate a newly issued card"
-          }
-        },
-        {
-          "name": "Block Card",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"lost\",\n  \"block_type\": \"temporary\"\n}"
-            },
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards/{{cardId}}/block",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards", "{{cardId}}", "block"]
-            },
-            "description": "Block a card (lost, stolen, etc.)"
-          }
-        },
-        {
-          "name": "Unblock Card",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards/{{cardId}}/unblock",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards", "{{cardId}}", "unblock"]
-            },
-            "description": "Unblock a temporarily blocked card"
-          }
-        },
-        {
-          "name": "Set Card Limits",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"daily_limit\": 1000.00,\n  \"monthly_limit\": 5000.00,\n  \"atm_limit\": 500.00,\n  \"online_limit\": 2000.00\n}"
-            },
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards/{{cardId}}/limits",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards", "{{cardId}}", "limits"]
-            },
-            "description": "Set spending limits for a card"
-          }
-        },
-        {
-          "name": "List Customer Cards",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/customers/{{customerId}}/cards",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}", "cards"]
-            },
-            "description": "Get all cards for a customer"
-          }
-        },
-        {
-          "name": "Card Transaction History",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{cardServiceUrl}}/api/{{apiVersion}}/cards/{{cardId}}/transactions?page=1&page_size=20",
-              "host": ["{{cardServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "cards", "{{cardId}}", "transactions"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "page_size",
-                  "value": "20"
-                }
-              ]
-            },
-            "description": "Get transaction history for a card"
-          }
-        }
-      ],
-      "description": "Debit and credit card management"
-    },
-    {
-      "name": "Loan Management",
-      "item": [
-        {
-          "name": "Apply for Loan",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"loan_type\": \"personal\",\n  \"amount\": 10000.00,\n  \"currency\": \"USD\",\n  \"term_months\": 24,\n  \"purpose\": \"Home improvement\",\n  \"employment_info\": {\n    \"employer\": \"Tech Corp\",\n    \"annual_income\": 75000.00,\n    \"employment_duration_months\": 36\n  }\n}"
-            },
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/loans/applications",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "loans", "applications"]
-            },
-            "description": "Submit a loan application"
-          }
-        },
-        {
-          "name": "Get Loan Application",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/loans/applications/{{applicationId}}",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "loans", "applications", "{{applicationId}}"]
-            },
-            "description": "Get loan application status"
-          }
-        },
-        {
-          "name": "Approve Loan",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"approved_amount\": 10000.00,\n  \"interest_rate\": 8.5,\n  \"term_months\": 24,\n  \"approved_by\": \"loan_officer@corebank.com\",\n  \"conditions\": [\"Monthly income verification required\"]\n}"
-            },
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/loans/applications/{{applicationId}}/approve",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "loans", "applications", "{{applicationId}}", "approve"]
-            },
-            "description": "Approve a loan application"
-          }
-        },
-        {
-          "name": "Disburse Loan",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"disbursement_account_id\": \"{{accountId}}\",\n  \"disbursement_method\": \"bank_transfer\"\n}"
-            },
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/loans/{{loanId}}/disburse",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "loans", "{{loanId}}", "disburse"]
-            },
-            "description": "Disburse approved loan funds"
-          }
-        },
-        {
-          "name": "Make Loan Payment",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"amount\": 500.00,\n  \"payment_account_id\": \"{{accountId}}\",\n  \"payment_type\": \"regular\"\n}"
-            },
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/loans/{{loanId}}/payments",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "loans", "{{loanId}}", "payments"]
-            },
-            "description": "Make a loan payment"
-          }
-        },
-        {
-          "name": "Get Loan Details",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/loans/{{loanId}}",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "loans", "{{loanId}}"]
-            },
-            "description": "Get loan details and current status"
-          }
-        },
-        {
-          "name": "Get Payment Schedule",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/loans/{{loanId}}/schedule",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "loans", "{{loanId}}", "schedule"]
-            },
-            "description": "Get loan payment schedule"
-          }
-        },
-        {
-          "name": "List Customer Loans",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{loanServiceUrl}}/api/{{apiVersion}}/customers/{{customerId}}/loans",
-              "host": ["{{loanServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}", "loans"]
-            },
-            "description": "Get all loans for a customer"
-          }
-        }
-      ],
-      "description": "Loan application and management operations"
-    },
-    {
-      "name": "Notification Management",
-      "item": [
-        {
-          "name": "Send SMS Notification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"message\": \"Your transaction of $500.00 has been completed successfully.\",\n  \"type\": \"transaction_alert\",\n  \"priority\": \"high\"\n}"
-            },
-            "url": {
-              "raw": "{{notificationServiceUrl}}/api/{{apiVersion}}/notifications/sms",
-              "host": ["{{notificationServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "notifications", "sms"]
-            },
-            "description": "Send SMS notification to customer"
-          }
-        },
-        {
-          "name": "Send Email Notification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"subject\": \"Monthly Account Statement\",\n  \"message\": \"Your monthly account statement is now available.\",\n  \"template_id\": \"monthly_statement\",\n  \"attachments\": [\n    {\n      \"name\": \"statement.pdf\",\n      \"url\": \"https://storage.example.com/statements/202501.pdf\"\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{notificationServiceUrl}}/api/{{apiVersion}}/notifications/email",
-              "host": ["{{notificationServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "notifications", "email"]
-            },
-            "description": "Send email notification to customer"
-          }
-        },
-        {
-          "name": "Send Push Notification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"title\": \"Security Alert\",\n  \"message\": \"New device login detected\",\n  \"type\": \"security_alert\",\n  \"action_url\": \"https://app.corebank.com/security\"\n}"
-            },
-            "url": {
-              "raw": "{{notificationServiceUrl}}/api/{{apiVersion}}/notifications/push",
-              "host": ["{{notificationServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "notifications", "push"]
-            },
-            "description": "Send push notification to mobile app"
-          }
-        },
-        {
-          "name": "Get Notification History",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{notificationServiceUrl}}/api/{{apiVersion}}/customers/{{customerId}}/notifications?page=1&page_size=20",
-              "host": ["{{notificationServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}", "notifications"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "page_size",
-                  "value": "20"
-                }
-              ]
-            },
-            "description": "Get notification history for customer"
-          }
-        },
-        {
-          "name": "Update Notification Preferences",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sms_enabled\": true,\n  \"email_enabled\": true,\n  \"push_enabled\": false,\n  \"transaction_alerts\": true,\n  \"marketing_messages\": false,\n  \"security_alerts\": true\n}"
-            },
-            "url": {
-              "raw": "{{notificationServiceUrl}}/api/{{apiVersion}}/customers/{{customerId}}/preferences",
-              "host": ["{{notificationServiceUrl}}"],
-              "path": ["api", "{{apiVersion}}", "customers", "{{customerId}}", "preferences"]
-            },
-            "description": "Update customer notification preferences"
-          }
-        }
-      ],
-      "description": "Customer notification and communication management"
-    },
-    {
-      "name": "Reporting & Analytics",
-      "item": [
-        {
-          "name": "Customer Analytics",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/reports/customers/analytics?period=monthly&year=2025",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "reports", "customers", "analytics"],
-              "query": [
-                {
-                  "key": "period",
-                  "value": "monthly"
-                },
-                {
-                  "key": "year",
-                  "value": "2025"
-                }
-              ]
-            },
-            "description": "Get customer analytics and insights"
-          }
-        },
-        {
-          "name": "Transaction Report",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/reports/transactions?from_date=2025-01-01&to_date=2025-01-31&format=pdf",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "reports", "transactions"],
-              "query": [
-                {
-                  "key": "from_date",
-                  "value": "2025-01-01"
-                },
-                {
-                  "key": "to_date",
-                  "value": "2025-01-31"
-                },
-                {
-                  "key": "format",
-                  "value": "pdf"
-                }
-              ]
-            },
-            "description": "Generate transaction summary report"
-          }
-        },
-        {
-          "name": "Account Balance Report",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/reports/balances?account_type=all&as_of_date=2025-01-31",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "reports", "balances"],
-              "query": [
-                {
-                  "key": "account_type",
-                  "value": "all"
-                },
-                {
-                  "key": "as_of_date",
-                  "value": "2025-01-31"
-                }
-              ]
-            },
-            "description": "Generate account balance summary"
-          }
-        },
-        {
-          "name": "Loan Portfolio Report",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/reports/loans/portfolio?status=active&risk_level=all",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "reports", "loans", "portfolio"],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "active"
-                },
-                {
-                  "key": "risk_level",
-                  "value": "all"
-                }
-              ]
-            },
-            "description": "Generate loan portfolio analysis"
-          }
-        }
-      ],
-      "description": "Business intelligence and reporting"
-    },
-    {
-      "name": "Admin Operations",
-      "item": [
-        {
-          "name": "Create User",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"loan.officer@corebank.com\",\n  \"email\": \"loan.officer@corebank.com\",\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Smith\",\n  \"role\": \"loan_officer\",\n  \"department\": \"lending\",\n  \"permissions\": [\"view_loans\", \"approve_loans\", \"manage_applications\"]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/admin/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "admin", "users"]
-            },
-            "description": "Create new system user"
-          }
-        },
-        {
-          "name": "Audit Trail",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/admin/audit?entity_type=customer&entity_id={{customerId}}&page=1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "admin", "audit"],
-              "query": [
-                {
-                  "key": "entity_type",
-                  "value": "customer"
-                },
-                {
-                  "key": "entity_id",
-                  "value": "{{customerId}}"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                }
-              ]
-            },
-            "description": "Get audit trail for entity"
-          }
-        },
-        {
-          "name": "System Configuration",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/admin/config",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "admin", "config"]
-            },
-            "description": "Get system configuration settings"
-          }
-        },
-        {
-          "name": "Update Configuration",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"max_daily_transfer_limit\": 10000.00,\n  \"account_closure_fee\": 25.00,\n  \"minimum_balance_savings\": 100.00,\n  \"overdraft_fee\": 35.00\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/{{apiVersion}}/admin/config",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "{{apiVersion}}", "admin", "config"]
-            },
-            "description": "Update system configuration"
-          }
-        }
-      ],
-      "description": "Administrative operations and system management"
+      "description": "Placeholder folders for future microservices in the Go-Core-Bank platform"
     }
   ],
   "event": [
@@ -1500,55 +939,17 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Auto-generate UUIDs for various operations",
-          "if (!pm.variables.get('customerId')) {",
-          "    pm.variables.set('customerId', '550e8400-e29b-41d4-a716-446655440000');",
+          "// Pre-request script for all requests",
+          "console.log('Making request to:', pm.request.url.toString());",
+          "",
+          "// Auto-generate UUID for customer operations if not provided",
+          "if (!pm.collectionVariables.get('customerId')) {",
+          "    pm.collectionVariables.set('customerId', '550e8400-e29b-41d4-a716-446655440000');",
+          "    console.log('Set default customer ID for testing');",
           "}",
           "",
-          "if (!pm.variables.get('accountId')) {",
-          "    pm.variables.set('accountId', '660e8400-e29b-41d4-a716-446655440001');",
-          "}",
-          "",
-          "if (!pm.variables.get('toAccountId')) {",
-          "    pm.variables.set('toAccountId', '770e8400-e29b-41d4-a716-446655440002');",
-          "}",
-          "",
-          "if (!pm.variables.get('transactionId')) {",
-          "    pm.variables.set('transactionId', '880e8400-e29b-41d4-a716-446655440003');",
-          "}",
-          "",
-          "if (!pm.variables.get('cardId')) {",
-          "    pm.variables.set('cardId', '990e8400-e29b-41d4-a716-446655440004');",
-          "}",
-          "",
-          "if (!pm.variables.get('loanId')) {",
-          "    pm.variables.set('loanId', 'aa0e8400-e29b-41d4-a716-446655440005');",
-          "}",
-          "",
-          "if (!pm.variables.get('applicationId')) {",
-          "    pm.variables.set('applicationId', 'bb0e8400-e29b-41d4-a716-446655440006');",
-          "}",
-          "",
-          "// Set service URLs if not defined",
-          "if (!pm.variables.get('accountServiceUrl')) {",
-          "    pm.variables.set('accountServiceUrl', 'http://localhost:8081');",
-          "}",
-          "",
-          "if (!pm.variables.get('transactionServiceUrl')) {",
-          "    pm.variables.set('transactionServiceUrl', 'http://localhost:8082');",
-          "}",
-          "",
-          "if (!pm.variables.get('cardServiceUrl')) {",
-          "    pm.variables.set('cardServiceUrl', 'http://localhost:8083');",
-          "}",
-          "",
-          "if (!pm.variables.get('loanServiceUrl')) {",
-          "    pm.variables.set('loanServiceUrl', 'http://localhost:8084');",
-          "}",
-          "",
-          "if (!pm.variables.get('notificationServiceUrl')) {",
-          "    pm.variables.set('notificationServiceUrl', 'http://localhost:8085');",
-          "}"
+          "// Set timestamp for requests",
+          "pm.collectionVariables.set('timestamp', new Date().toISOString());"
         ]
       }
     },
@@ -1557,75 +958,25 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Global test scripts for all requests",
+          "// Global test script for all requests",
           "pm.test('Response time is acceptable', function () {",
           "    pm.expect(pm.response.responseTime).to.be.below(2000);",
           "});",
           "",
-          "// Skip content-type check for health endpoints and certain operations",
-          "if (!pm.request.url.path.includes('health') && pm.response.code !== 204) {",
-          "    pm.test('Response has correct Content-Type', function () {",
+          "pm.test('Response has Content-Type header', function () {",
+          "    if (pm.response.code !== 204) {", 
           "        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
-          "    });",
-          "}",
+          "    }",
+          "});",
           "",
-          "// Auto-extract and store IDs from successful create operations",
-          "if (pm.response.code === 201 && pm.response.json()) {",
-          "    const response = pm.response.json();",
-          "    ",
-          "    // Customer ID extraction",
-          "    if (response.id && pm.request.url.path.includes('customers')) {",
-          "        pm.collectionVariables.set('customerId', response.id);",
-          "        console.log('Stored customer ID: ' + response.id);",
-          "    }",
-          "    ",
-          "    // Account ID extraction",
-          "    if (response.id && pm.request.url.path.includes('accounts')) {",
-          "        pm.collectionVariables.set('accountId', response.id);",
-          "        console.log('Stored account ID: ' + response.id);",
-          "    }",
-          "    ",
-          "    // Transaction ID extraction",
-          "    if (response.transaction_id && pm.request.url.path.includes('transactions')) {",
-          "        pm.collectionVariables.set('transactionId', response.transaction_id);",
-          "        console.log('Stored transaction ID: ' + response.transaction_id);",
-          "    }",
-          "    ",
-          "    // Card ID extraction",
-          "    if (response.id && pm.request.url.path.includes('cards')) {",
-          "        pm.collectionVariables.set('cardId', response.id);",
-          "        console.log('Stored card ID: ' + response.id);",
-          "    }",
-          "    ",
-          "    // Loan application ID extraction",
-          "    if (response.application_id && pm.request.url.path.includes('applications')) {",
-          "        pm.collectionVariables.set('applicationId', response.application_id);",
-          "        console.log('Stored application ID: ' + response.application_id);",
-          "    }",
-          "    ",
-          "    // Loan ID extraction",
-          "    if (response.loan_id && pm.request.url.path.includes('loans')) {",
-          "        pm.collectionVariables.set('loanId', response.loan_id);",
-          "        console.log('Stored loan ID: ' + response.loan_id);",
-          "    }",
-          "}",
+          "// Log response details for debugging",
+          "console.log('Response Status:', pm.response.status);",
+          "console.log('Response Time:', pm.response.responseTime + 'ms');",
           "",
-          "// Store auth token from login",
-          "if (pm.response.code === 200 && pm.request.url.path.includes('auth/login')) {",
-          "    const response = pm.response.json();",
-          "    if (response.access_token) {",
-          "        pm.collectionVariables.set('authToken', response.access_token);",
-          "        console.log('Stored auth token');",
-          "    }",
-          "    if (response.refresh_token) {",
-          "        pm.collectionVariables.set('refreshToken', response.refresh_token);",
-          "        console.log('Stored refresh token');",
-          "    }",
-          "}",
-          "",
-          "// Log errors for debugging",
-          "if (pm.response.code >= 400) {",
-          "    console.log('Error Response: ' + pm.response.text());",
+          "// Store customer ID from create response for subsequent requests",
+          "if (pm.response.code === 201 && pm.response.json && pm.response.json().id) {",
+          "    pm.collectionVariables.set('customerId', pm.response.json().id);",
+          "    console.log('Updated customer ID:', pm.response.json().id);",
           "}"
         ]
       }
