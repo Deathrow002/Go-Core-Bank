@@ -57,5 +57,8 @@ Thumbs.db
 tmp/
 temp/
 
-# Build File
+# Build Files
 customer-service
+customer-service.exe
+main
+main.exe
