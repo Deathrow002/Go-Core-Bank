@@ -1,12 +1,13 @@
-.PHONY: help build run clean docker-build docker-run docker-stop customer-service
+.PHONY: help build run clean docker-build docker-run docker-stop customer-service tidy
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  customer-service - Build and manage Customer Service"
+	@echo "  customer-service - Build Customer Service"
 	@echo "  build            - Build all services"
 	@echo "  run              - Run all services with Docker Compose"
 	@echo "  clean            - Clean build artifacts"
+	@echo "  tidy             - Run go mod tidy on all services"
 	@echo "  docker-build     - Build Docker images"
 	@echo "  docker-run       - Run with Docker Compose"
 	@echo "  docker-stop      - Stop Docker containers"
@@ -14,10 +15,15 @@ help:
 # Customer Service commands
 customer-service:
 	@echo "Building Customer Service..."
-	cd Customer-Service && go build -o customer-service cmd/main.go
+	cd Customer-Service && go build -o customer-service ./cmd/customer-service
 
 # Build all services
 build: customer-service
+
+# Run go mod tidy on all services
+tidy:
+	@echo "Running go mod tidy on Customer Service..."
+	cd Customer-Service && go mod tidy
 
 # Run all services
 run:
@@ -33,8 +39,8 @@ docker-build:
 	docker-compose build
 
 # Run with Docker Compose
-docker-run:
-	docker-compose up -d
+docker-run: docker-build
+	docker-compose up
 
 # Stop Docker containers
 docker-stop:

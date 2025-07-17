@@ -1,68 +1,48 @@
-.PHONY: help build run clean docker-build docker-run docker-stop migrate
+.PHONY: help build run clean dev-setup migrate docker-build docker-run docker-stop
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  build         - Build the customer service binary"
-	@echo "  run           - Run the customer service"
-	@echo "  clean         - Clean build artifacts"
-	@echo "  docker-build  - Build Docker image"
-	@echo "  docker-run    - Run with Docker Compose"
-	@echo "  docker-stop   - Stop Docker containers"
-	@echo "  migrate       - Run database migrations"
-	@echo "  mod-tidy      - Run go mod tidy"
+	@echo "  build            - Build the customer service"
+	@echo "  run              - Run the customer service locally"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  dev-setup        - Set up development environment"
+	@echo "  migrate          - Run database migrations"
+	@echo "  docker-build     - Build Docker image"
+	@echo "  docker-run       - Run with Docker Compose"
+	@echo "  docker-stop      - Stop Docker containers"
 
 # Build the application
 build:
-	go build -o bin/customer-service ./cmd/main.go
-	go build -o bin/migrate ./cmd/migrate/main.go
+	go build -o customer-service ./cmd
 
-# Run the application
-run:
-	go run ./cmd/main.go
+# Run the application locally
+run: build
+	./customer-service
 
 # Clean build artifacts
 clean:
-	rm -rf bin/
+	rm -f customer-service
 	go clean
+
+# Set up development environment
+dev-setup:
+	@echo "Setting up development environment..."
+	@if [ ! -f .env ]; then cp .env.example .env; echo "Created .env file"; fi
+	go mod download
+
+# Run database migrations
+migrate:
+	go run ./cmd/migrate
 
 # Build Docker image
 docker-build:
 	docker build -t customer-service .
 
 # Run with Docker Compose
-docker-run:
-	docker-compose up --build
+docker-run: docker-build
+	docker-compose up
 
 # Stop Docker containers
 docker-stop:
 	docker-compose down
-
-# Run database migrations
-migrate:
-	go run ./cmd/migrate/main.go
-
-# Run go mod tidy
-mod-tidy:
-	go mod tidy
-
-# Install dependencies
-deps:
-	go mod download
-
-# Format code
-fmt:
-	go fmt ./...
-
-# Run linter (requires golangci-lint)
-lint:
-	golangci-lint run
-
-# Development setup
-dev-setup: mod-tidy
-	@echo "Development environment setup complete"
-	@echo "To start the application:"
-	@echo "  1. Set up your .env file: cp .env.example .env"
-	@echo "  2. Start PostgreSQL (or use docker-compose)"
-	@echo "  3. Run migrations: make migrate"
-	@echo "  4. Start the service: make run"
