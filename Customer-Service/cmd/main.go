@@ -2,7 +2,7 @@ package main
 
 import (
 	"customer-service/internal/config"
-	"customer-service/internal/customer/handlers"
+	"customer-service/internal/customer/controllers"
 	"customer-service/internal/customer/repository"
 	"customer-service/internal/customer/service"
 	"customer-service/internal/database"
@@ -48,10 +48,10 @@ func main() {
 	db := database.GetDB()
 	customerRepo := repository.NewCustomerRepository(db)
 	customerService := service.NewCustomerService(customerRepo)
-	customerHandler := handlers.NewCustomerHandler(customerService)
+	customerController := controllers.NewCustomerController(customerService)
 
 	// Setup router
-	router := setupRouter(cfg, customerHandler)
+	router := setupRouter(cfg, customerController)
 
 	// Start server
 	log.Printf("Starting server on %s", cfg.GetServerAddress())
@@ -60,7 +60,7 @@ func main() {
 	}
 }
 
-func setupRouter(cfg *config.Config, customerHandler *handlers.CustomerHandler) *gin.Engine {
+func setupRouter(cfg *config.Config, customerController *controllers.CustomerController) *gin.Engine {
 	// Set gin mode
 	if cfg.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
@@ -88,12 +88,12 @@ func setupRouter(cfg *config.Config, customerHandler *handlers.CustomerHandler) 
 	{
 		customers := v1.Group("/customers")
 		{
-			customers.POST("", customerHandler.CreateCustomer)
-			customers.GET("/:id", customerHandler.GetCustomer)
-			customers.PUT("/:id", customerHandler.UpdateCustomer)
-			customers.DELETE("/:id", customerHandler.DeleteCustomer)
-			customers.GET("", customerHandler.ListCustomers)
-			customers.GET("/search", customerHandler.SearchCustomers)
+			customers.POST("", customerController.CreateCustomer)
+			customers.GET("/:id", customerController.GetCustomer)
+			customers.PUT("/:id", customerController.UpdateCustomer)
+			customers.DELETE("/:id", customerController.DeleteCustomer)
+			customers.GET("", customerController.ListCustomers)
+			customers.GET("/search", customerController.SearchCustomers)
 		}
 	}
 
