@@ -50,6 +50,13 @@ func main() {
 	// 🎯 **Setup router using separate router package**
 	r := router.SetupRouter(cfg, customerController)
 
+	// Debug: Print all registered routes
+	routes := r.Routes()
+	log.Println("📋 Registered routes:")
+	for _, route := range routes {
+		log.Printf("  %s %s", route.Method, route.Path)
+	}
+
 	// Start server
 	log.Printf("Starting Customer Service on %s", cfg.GetServerAddress())
 	if err := r.Run(cfg.GetServerAddress()); err != nil {

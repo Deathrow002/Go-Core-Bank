@@ -1,36 +1,50 @@
 # Build stage
 FROM golang:1.23-alpine AS builder
 
+# Install git and ca-certificates for module downloads
+RUN apk add --no-cache git ca-certificates tzdata
+
 # Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy go mod files first for better caching
 COPY go.mod go.sum ./
-RUN go mod download
+
+# Set Go module proxy and download with retries
+ENV GOPROXY=https://proxy.golang.org,direct
+ENV GOSUMDB=sum.golang.org
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+
+# Download dependencies with retry logic
+RUN go mod download && go mod verify
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o customer-service ./cmd/main.go
+RUN go build -ldflags="-w -s" -o customer-service ./cmd/main.go
 
-# Final stage
+# Runtime stage
 FROM alpine:latest
 
-# Install ca-certificates for HTTPS requests
+# Install ca-certificates for HTTPS
 RUN apk --no-cache add ca-certificates
 
-# Set working directory
 WORKDIR /root/
 
-# Copy binary from builder stage
+# Copy the binary from builder stage
 COPY --from=builder /app/customer-service .
 
-# Copy .env.example as .env (optional)
-COPY --from=builder /app/.env.example .env
+# Copy any necessary config files
+COPY --from=builder /app/.env* ./
 
 # Expose port
 EXPOSE 8080
 
-# Command to run
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# Run the binary
 CMD ["./customer-service"]

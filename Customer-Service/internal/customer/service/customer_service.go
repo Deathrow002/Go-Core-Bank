@@ -4,19 +4,18 @@ import (
 	"customer-service/internal/customer/models"
 	"customer-service/internal/customer/repository"
 	"errors"
-	"math"
 
 	"github.com/google/uuid"
 )
 
 // CustomerService defines the interface for customer business logic
 type CustomerService interface {
-	CreateCustomer(req models.CustomerRequest) (*models.CustomerResponse, error)
-	GetCustomer(id uuid.UUID) (*models.CustomerResponse, error)
-	UpdateCustomer(id uuid.UUID, req models.CustomerRequest) (*models.CustomerResponse, error)
+	CreateCustomer(req models.CustomerRequest) (*models.Customer, error)
+	GetCustomer(id uuid.UUID) (*models.Customer, error)
+	UpdateCustomer(id uuid.UUID, req models.CustomerRequest) (*models.Customer, error)
 	DeleteCustomer(id uuid.UUID) error
-	ListCustomers(page, pageSize int) (*models.CustomerListResponse, error)
-	SearchCustomers(req models.CustomerSearchRequest) (*models.CustomerListResponse, error)
+	ListCustomers() ([]models.Customer, error) // Remove pagination parameters
+	SearchCustomers(req models.CustomerSearchRequest) ([]models.Customer, error) // Remove pagination from return
 	ValidateCustomer(req models.CustomerValidationRequest) (bool, error)
 }
 
@@ -32,7 +31,7 @@ func NewCustomerService(repo repository.CustomerRepository) CustomerService {
 }
 
 // CreateCustomer creates a new customer
-func (s *customerService) CreateCustomer(req models.CustomerRequest) (*models.CustomerResponse, error) {
+func (s *customerService) CreateCustomer(req models.CustomerRequest) (*models.Customer, error) {
 	// Validate business rules
 	if err := s.validateCustomerRequest(req); err != nil {
 		return nil, err
@@ -60,24 +59,22 @@ func (s *customerService) CreateCustomer(req models.CustomerRequest) (*models.Cu
 		return nil, err
 	}
 
-	// Convert to response
-	response := customer.ToResponse()
-	return &response, nil
+	// Return the created customer
+	return customer, nil
 }
 
 // GetCustomer retrieves a customer by ID
-func (s *customerService) GetCustomer(id uuid.UUID) (*models.CustomerResponse, error) {
+func (s *customerService) GetCustomer(id uuid.UUID) (*models.Customer, error) {
 	customer, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	response := customer.ToResponse()
-	return &response, nil
+	return customer, nil
 }
 
 // UpdateCustomer updates an existing customer
-func (s *customerService) UpdateCustomer(id uuid.UUID, req models.CustomerRequest) (*models.CustomerResponse, error) {
+func (s *customerService) UpdateCustomer(id uuid.UUID, req models.CustomerRequest) (*models.Customer, error) {
 	// Validate business rules
 	if err := s.validateCustomerRequest(req); err != nil {
 		return nil, err
@@ -110,9 +107,8 @@ func (s *customerService) UpdateCustomer(id uuid.UUID, req models.CustomerReques
 		return nil, err
 	}
 
-	// Convert to response
-	response := customer.ToResponse()
-	return &response, nil
+	// Return the updated customer
+	return customer, nil
 }
 
 // DeleteCustomer deletes a customer
@@ -127,96 +123,36 @@ func (s *customerService) DeleteCustomer(id uuid.UUID) error {
 	return s.repo.Delete(id)
 }
 
-// ListCustomers lists customers with pagination
-func (s *customerService) ListCustomers(page, pageSize int) (*models.CustomerListResponse, error) {
-	// Set default values
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 10
-	}
-	if pageSize > 100 {
-		pageSize = 100 // Limit maximum page size
-	}
-
-	customers, total, err := s.repo.List(page, pageSize)
+// ListCustomers lists all customers (removed pagination)
+func (s *customerService) ListCustomers() ([]models.Customer, error) {
+	customers, err := s.repo.List()
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to response format
-	customerResponses := make([]models.CustomerResponse, len(customers))
-	for i, customer := range customers {
-		customerResponses[i] = customer.ToResponse()
-	}
-
-	// Calculate total pages
-	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
-
-	return &models.CustomerListResponse{
-		Customers:  customerResponses,
-		Total:      total,
-		Page:       page,
-		PageSize:   pageSize,
-		TotalPages: totalPages,
-	}, nil
+	return customers, nil
 }
 
-// ValidateCustomer checks if a customer exists by ID and returns true/false
+// ValidateCustomer checks if a customer exists and returns boolean
 func (s *customerService) ValidateCustomer(req models.CustomerValidationRequest) (bool, error) {
-	customer, err := s.repo.GetByID(req.ID)
+	err := s.repo.ValidateCustomer(req)
 	if err != nil {
-		// If customer not found, return false (but no error)
-		if err.Error() == "customer not found" || err.Error() == "record not found" {
-			return false, nil
+		if err.Error() == "customer not found" {
+			return false, nil // Customer doesn't exist, but no error occurred
 		}
-		// If there's a database error, return error
-		return false, err
+		return false, err // Actual error occurred
 	}
-
-	// Customer exists
-	if customer != nil {
-		return true, nil
-	}
-
-	return false, nil
+	return true, nil // Customer exists
 }
 
-// SearchCustomers searches customers based on criteria
-func (s *customerService) SearchCustomers(req models.CustomerSearchRequest) (*models.CustomerListResponse, error) {
-	// Set default values
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 10
-	}
-	if req.PageSize > 100 {
-		req.PageSize = 100 // Limit maximum page size
-	}
-
-	customers, total, err := s.repo.Search(req)
+// SearchCustomers searches customers based on criteria (removed pagination)
+func (s *customerService) SearchCustomers(req models.CustomerSearchRequest) ([]models.Customer, error) {
+	customers, err := s.repo.Search(req)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to response format
-	customerResponses := make([]models.CustomerResponse, len(customers))
-	for i, customer := range customers {
-		customerResponses[i] = customer.ToResponse()
-	}
-
-	// Calculate total pages
-	totalPages := int(math.Ceil(float64(total) / float64(req.PageSize)))
-
-	return &models.CustomerListResponse{
-		Customers:  customerResponses,
-		Total:      total,
-		Page:       req.Page,
-		PageSize:   req.PageSize,
-		TotalPages: totalPages,
-	}, nil
+	return customers, nil
 }
 
 // validateCustomerRequest validates the customer request

@@ -18,8 +18,8 @@ type CustomerRepository interface {
 	ValidateCustomer(req models.CustomerValidationRequest) error
 	Update(customer *models.Customer) error
 	Delete(id uuid.UUID) error
-	List(page, pageSize int) ([]models.Customer, int64, error)
-	Search(req models.CustomerSearchRequest) ([]models.Customer, int64, error)
+	List() ([]models.Customer, error) // Remove pagination parameters
+	Search(req models.CustomerSearchRequest) ([]models.Customer, error) // Remove pagination
 }
 
 type customerRepository struct {
@@ -68,7 +68,7 @@ func (r *customerRepository) GetByEmail(email string) (*models.Customer, error) 
 	return &customer, nil
 }
 
-// Validate Customer is Existing
+// ValidateCustomer checks if customer exists
 func (r *customerRepository) ValidateCustomer(req models.CustomerValidationRequest) error {
 	var customer models.Customer
 	if err := r.db.Where("ID = ?", req.ID).First(&customer).Error; err != nil {
@@ -79,7 +79,6 @@ func (r *customerRepository) ValidateCustomer(req models.CustomerValidationReque
 	}
 	return nil
 }
-
 
 // Update updates an existing customer record
 func (r *customerRepository) Update(customer *models.Customer) error {
@@ -104,31 +103,21 @@ func (r *customerRepository) Delete(id uuid.UUID) error {
 	return nil
 }
 
-// List retrieves customers with pagination
-func (r *customerRepository) List(page, pageSize int) ([]models.Customer, int64, error) {
+// List retrieves all customers (removed pagination)
+func (r *customerRepository) List() ([]models.Customer, error) {
 	var customers []models.Customer
-	var total int64
 
-	// Count total records
-	if err := r.db.Model(&models.Customer{}).Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to count customers: %w", err)
+	// Retrieve all customers ordered by created_at DESC
+	if err := r.db.Order("created_at DESC").Find(&customers).Error; err != nil {
+		return nil, fmt.Errorf("failed to list customers: %w", err)
 	}
 
-	// Calculate offset
-	offset := (page - 1) * pageSize
-
-	// Retrieve customers with pagination
-	if err := r.db.Limit(pageSize).Offset(offset).Order("created_at DESC").Find(&customers).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to list customers: %w", err)
-	}
-
-	return customers, total, nil
+	return customers, nil
 }
 
-// Search searches customers based on criteria
-func (r *customerRepository) Search(req models.CustomerSearchRequest) ([]models.Customer, int64, error) {
+// Search searches customers based on criteria (removed pagination)
+func (r *customerRepository) Search(req models.CustomerSearchRequest) ([]models.Customer, error) {
 	var customers []models.Customer
-	var total int64
 
 	query := r.db.Model(&models.Customer{})
 
@@ -145,25 +134,10 @@ func (r *customerRepository) Search(req models.CustomerSearchRequest) ([]models.
 		query = query.Where("status = ?", req.Status)
 	}
 
-	// Count total matching records
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to count customers: %w", err)
+	// Retrieve all matching customers
+	if err := query.Order("created_at DESC").Find(&customers).Error; err != nil {
+		return nil, fmt.Errorf("failed to search customers: %w", err)
 	}
 
-	// Apply pagination
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 10
-	}
-
-	offset := (req.Page - 1) * req.PageSize
-
-	// Retrieve customers
-	if err := query.Limit(req.PageSize).Offset(offset).Order("created_at DESC").Find(&customers).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to search customers: %w", err)
-	}
-
-	return customers, total, nil
+	return customers, nil
 }
