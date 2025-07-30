@@ -1,60 +1,54 @@
-.PHONY: help build run clean docker-build docker-run docker-stop customer-service tidy
+.PHONY: help build up down logs clean restart
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  customer-service - Build Customer Service"
-	@echo "  build            - Build all services"
-	@echo "  run              - Run all services with Docker Compose"
-	@echo "  clean            - Clean build artifacts"
-	@echo "  tidy             - Run go mod tidy on all services"
-	@echo "  docker-build     - Build Docker images"
-	@echo "  docker-run       - Run with Docker Compose"
-	@echo "  docker-stop      - Stop Docker containers"
-
-# Customer Service commands
-customer-service:
-	@echo "Building Customer Service..."
-	cd Customer-Service && go build -o customer-service ./cmd/customer-service
+	@echo "  build     - Build all services"
+	@echo "  up        - Start all services"
+	@echo "  down      - Stop all services"
+	@echo "  logs      - View logs"
+	@echo "  clean     - Clean up containers and volumes"
+	@echo "  restart   - Restart all services"
 
 # Build all services
-build: customer-service
+build:
+	docker-compose build --no-cache
 
-# Run go mod tidy on all services
-tidy:
-	@echo "Running go mod tidy on Customer Service..."
-	cd Customer-Service && go mod tidy
+# Start all services
+up:
+	docker-compose up -d
 
-# Run all services
-run:
-	docker-compose up --build
-
-# Clean build artifacts
-clean:
-	cd Customer-Service && rm -f customer-service
-	docker-compose down --volumes --remove-orphans
-
-# Build Docker images
-docker-build:
-	docker-compose build
-
-# Run with Docker Compose
-docker-run: docker-build
+# Start with logs
+up-logs:
 	docker-compose up
 
-# Stop Docker containers
-docker-stop:
+# Stop all services
+down:
 	docker-compose down
 
-# Development utilities
-fmt:
-	cd Customer-Service && go fmt ./...
+# View logs
+logs:
+	docker-compose logs -f
 
-# Development setup
-dev-setup:
-	@echo "Development environment setup complete"
-	@echo "To start the application:"
-	@echo "  1. Run: make run"
-	@echo "  2. Access API at: http://localhost:8080"
-	@echo "  3. Access pgAdmin at: http://localhost:5050"
-	@echo "  4. Check health: curl http://localhost:8080/health"
+# View specific service logs
+logs-customer:
+	docker-compose logs -f customer-service
+
+logs-account:
+	docker-compose logs -f account-service
+
+# Clean up
+clean:
+	docker-compose down -v --remove-orphans
+	docker system prune -f
+
+# Restart services
+restart:
+	docker-compose restart
+
+# Health check all services
+health:
+	@echo "Checking service health..."
+	@curl -f http://localhost/health || echo "API Gateway: DOWN"
+	@curl -f http://localhost:8080/health || echo "Customer Service: DOWN"
+	@curl -f http://localhost:8081/health || echo "Account Service: DOWN"

@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # PostgreSQL Database
   postgres:
@@ -11,29 +13,41 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - core_bank_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d core_bank"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
   # Customer Service
   customer-service:
-    build: ./Customer-Service
+    build: 
+      context: ./Customer-Service
+      dockerfile: Dockerfile
     container_name: customer_service
     environment:
+      # Database configuration
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: core_bank
       DB_SSL_MODE: disable
+      
+      # Server configuration
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 8080
+      
+      # Application environment
       APP_ENV: development
+      LOG_LEVEL: info
+      
+      # JWT configuration
+      JWT_SECRET: your-customer-service-jwt-secret-key-here
     ports:
       - "8080:8080"
     depends_on:
@@ -41,25 +55,119 @@ services:
         condition: service_healthy
     networks:
       - core_bank_network
-    restart: on-failure
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # PgAdmin (optional - for database management)
+  # Account Service
+  account-service:
+    build:
+      context: ./Account-Service
+      dockerfile: Dockerfile
+    container_name: account_service
+    environment:
+      # Database configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: core_bank
+      DB_SSL_MODE: disable
+      
+      # Server configuration
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8081
+      
+      # Application environment
+      APP_ENV: development
+      LOG_LEVEL: info
+      
+      # JWT configuration
+      JWT_SECRET: your-account-service-jwt-secret-key-here
+      
+      # External service URLs
+      CUSTOMER_SERVICE_URL: http://customer-service:8080
+    ports:
+      - "8081:8081"
+    depends_on:
+      customer-service:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - core_bank_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis (for caching and session management)
+  redis:
+    image: redis:7-alpine
+    container_name: core_bank_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - core_bank_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # PgAdmin (Database management UI)
   pgadmin:
     image: dpage/pgadmin4
     container_name: core_bank_pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "5050:80"
     depends_on:
       - postgres
     networks:
       - core_bank_network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  # API Gateway (Nginx reverse proxy)
+  api-gateway:
+    image: nginx:alpine
+    container_name: core_bank_gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - customer-service
+      - account-service
+    networks:
+      - core_bank_network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
 
 networks:
   core_bank_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
