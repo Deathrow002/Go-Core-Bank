@@ -17,6 +17,7 @@ type CustomerService interface {
 	DeleteCustomer(id uuid.UUID) error
 	ListCustomers(page, pageSize int) (*models.CustomerListResponse, error)
 	SearchCustomers(req models.CustomerSearchRequest) (*models.CustomerListResponse, error)
+	ValidateCustomer(req models.CustomerValidationRequest) (bool, error)
 }
 
 type customerService struct {
@@ -162,6 +163,26 @@ func (s *customerService) ListCustomers(page, pageSize int) (*models.CustomerLis
 	}, nil
 }
 
+// ValidateCustomer checks if a customer exists by ID and returns true/false
+func (s *customerService) ValidateCustomer(req models.CustomerValidationRequest) (bool, error) {
+	customer, err := s.repo.GetByID(req.ID)
+	if err != nil {
+		// If customer not found, return false (but no error)
+		if err.Error() == "customer not found" || err.Error() == "record not found" {
+			return false, nil
+		}
+		// If there's a database error, return error
+		return false, err
+	}
+
+	// Customer exists
+	if customer != nil {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // SearchCustomers searches customers based on criteria
 func (s *customerService) SearchCustomers(req models.CustomerSearchRequest) (*models.CustomerListResponse, error) {
 	// Set default values
@@ -212,7 +233,7 @@ func (s *customerService) validateCustomerRequest(req models.CustomerRequest) er
 	if req.Phone == "" {
 		return errors.New("phone is required")
 	}
-	
+
 	// Add more validation rules as needed
 	return nil
 }

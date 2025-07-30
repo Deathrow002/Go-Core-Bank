@@ -15,6 +15,7 @@ type CustomerRepository interface {
 	Create(customer *models.Customer) error
 	GetByID(id uuid.UUID) (*models.Customer, error)
 	GetByEmail(email string) (*models.Customer, error)
+	ValidateCustomer(req models.CustomerValidationRequest) error
 	Update(customer *models.Customer) error
 	Delete(id uuid.UUID) error
 	List(page, pageSize int) ([]models.Customer, int64, error)
@@ -66,6 +67,19 @@ func (r *customerRepository) GetByEmail(email string) (*models.Customer, error) 
 	}
 	return &customer, nil
 }
+
+// Validate Customer is Existing
+func (r *customerRepository) ValidateCustomer(req models.CustomerValidationRequest) error {
+	var customer models.Customer
+	if err := r.db.Where("ID = ?", req.ID).First(&customer).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("customer not found")
+		}
+		return fmt.Errorf("failed to get customer: %w", err)
+	}
+	return nil
+}
+
 
 // Update updates an existing customer record
 func (r *customerRepository) Update(customer *models.Customer) error {

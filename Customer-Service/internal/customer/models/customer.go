@@ -65,6 +65,10 @@ type CustomerResponse struct {
 	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
+type CustomerValidationRequest struct {
+	ID        uuid.UUID      `json:"id" validate:"required"`
+}
+
 // CustomerListResponse represents the response for listing customers
 type CustomerListResponse struct {
 	Customers  []CustomerResponse `json:"customers"`

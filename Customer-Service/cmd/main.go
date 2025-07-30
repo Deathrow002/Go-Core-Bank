@@ -6,11 +6,8 @@ import (
 	"customer-service/internal/customer/repository"
 	"customer-service/internal/customer/service"
 	"customer-service/internal/database"
-	"customer-service/pkg/middleware"
+	"customer-service/internal/router" // Import the router package
 	"log"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 // @title Core Banking Customer Service API
@@ -50,52 +47,12 @@ func main() {
 	customerService := service.NewCustomerService(customerRepo)
 	customerController := controllers.NewCustomerController(customerService)
 
-	// Setup router
-	router := setupRouter(cfg, customerController)
+	// 🎯 **Setup router using separate router package**
+	r := router.SetupRouter(cfg, customerController)
 
 	// Start server
-	log.Printf("Starting server on %s", cfg.GetServerAddress())
-	if err := router.Run(cfg.GetServerAddress()); err != nil {
+	log.Printf("Starting Customer Service on %s", cfg.GetServerAddress())
+	if err := r.Run(cfg.GetServerAddress()); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
-}
-
-func setupRouter(cfg *config.Config, customerController *controllers.CustomerController) *gin.Engine {
-	// Set gin mode
-	if cfg.IsProduction() {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	// Create router
-	router := gin.New()
-
-	// Add middleware
-	router.Use(middleware.Logger())
-	router.Use(middleware.Recovery())
-	router.Use(middleware.CORS())
-
-	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "healthy",
-			"service": "customer-service",
-			"version": "1.0.0",
-		})
-	})
-
-	// API v1 routes
-	v1 := router.Group("/api/v1")
-	{
-		customers := v1.Group("/customers")
-		{
-			customers.POST("", customerController.CreateCustomer)
-			customers.GET("/:id", customerController.GetCustomer)
-			customers.PUT("/:id", customerController.UpdateCustomer)
-			customers.DELETE("/:id", customerController.DeleteCustomer)
-			customers.GET("", customerController.ListCustomers)
-			customers.GET("/search", customerController.SearchCustomers)
-		}
-	}
-
-	return router
 }
