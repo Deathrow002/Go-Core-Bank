@@ -26,7 +26,6 @@ type customerRepository struct {
 	db *gorm.DB
 }
 
-// NewCustomerRepository creates a new customer repository instance
 func NewCustomerRepository(db *gorm.DB) CustomerRepository {
 	return &customerRepository{
 		db: db,

@@ -8,12 +8,8 @@ import (
 	"account-service/internal/database"
 	"account-service/internal/external"
 	"account-service/internal/router" // Import router package
-	"account-service/pkg/middleware"
 	"log"
-	"net/http"
 	"os"
-
-	"github.com/gin-gonic/gin"
 )
 
 // @title Core Banking Account Service API
@@ -68,46 +64,4 @@ func main() {
 	if err := r.Run(cfg.GetServerAddress()); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
-}
-
-func setupRouter(cfg *config.Config, accountController *controllers.AccountController) *gin.Engine {
-	// Set gin mode
-	if cfg.IsProduction() {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	// Create router
-	router := gin.New()
-
-	// Add middleware
-	router.Use(middleware.Logger())
-	router.Use(middleware.Recovery())
-	router.Use(middleware.CORS())
-
-	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "healthy",
-			"service": "account-service",
-			"version": "1.0.0",
-		})
-	})
-
-	// API v1 routes
-	v1 := router.Group("/api/v1")
-	{
-		accounts := v1.Group("/accounts")
-		{
-			accounts.POST("", accountController.CreateAccount)
-			accounts.GET("/:id", accountController.GetAccount)
-			accounts.PUT("/:id", accountController.UpdateAccount)
-			accounts.DELETE("/:id", accountController.DeleteAccount)
-			accounts.GET("", accountController.ListAccounts)
-			accounts.GET("/search", accountController.SearchAccounts)
-			accounts.GET("/number/:account_number", accountController.GetAccountByNumber)
-			accounts.GET("/customer/:customer_id", accountController.GetAccountsByCustomer)
-		}
-	}
-
-	return router
 }

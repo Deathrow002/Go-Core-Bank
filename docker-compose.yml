@@ -23,6 +23,58 @@ services:
       retries: 5
       start_period: 30s
 
+  # Authentication Service
+  authentication-service:
+    build:
+      context: ./Authentication-Service
+      dockerfile: dockerfile
+    container_name: authentication_service
+    environment:
+      # Database configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: core_bank
+      DB_SSL_MODE: disable
+      
+      # Server configuration
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8082
+      
+      # Application environment
+      APP_ENV: development
+      LOG_LEVEL: info
+      
+      # JWT configuration
+      JWT_SECRET: eUhqLeLgicZs4KR39IGb0Kdj3hGI+VU+ZzicQhy3K0Y=
+      JWT_EXPIRY: 24h
+      
+      # Password hashing
+      BCRYPT_COST: 12
+      
+      # Redis configuration (for session management)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - core_bank_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # Customer Service
   customer-service:
     build: 
@@ -47,10 +99,15 @@ services:
       LOG_LEVEL: info
       
       # JWT configuration
-      JWT_SECRET: your-customer-service-jwt-secret-key-here
+      JWT_SECRET: eUhqLeLgicZs4KR39IGb0Kdj3hGI+VU+ZzicQhy3K0Y=
+      
+      # External service URLs
+      AUTHENTICATION_SERVICE_URL: http://authentication-service:8082
     ports:
       - "8080:8080"
     depends_on:
+      authentication-service:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
@@ -87,14 +144,17 @@ services:
       LOG_LEVEL: info
       
       # JWT configuration
-      JWT_SECRET: your-account-service-jwt-secret-key-here
+      JWT_SECRET: eUhqLeLgicZs4KR39IGb0Kdj3hGI+VU+ZzicQhy3K0Y=
       
       # External service URLs
       CUSTOMER_SERVICE_URL: http://customer-service:8080
+      AUTHENTICATION_SERVICE_URL: http://authentication-service:8082
     ports:
       - "8081:8081"
     depends_on:
       customer-service:
+        condition: service_healthy
+      authentication-service:
         condition: service_healthy
       postgres:
         condition: service_healthy
@@ -151,6 +211,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
+      - authentication-service
       - customer-service
       - account-service
     networks:

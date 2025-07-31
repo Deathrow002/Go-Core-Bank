@@ -8,16 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// CustomerService defines the interface for customer business logic
-type CustomerService interface {
-	CreateCustomer(req models.CustomerRequest) (*models.Customer, error)
-	GetCustomer(id uuid.UUID) (*models.Customer, error)
-	UpdateCustomer(id uuid.UUID, req models.CustomerRequest) (*models.Customer, error)
-	DeleteCustomer(id uuid.UUID) error
-	ListCustomers() ([]models.Customer, error) // Remove pagination parameters
-	SearchCustomers(req models.CustomerSearchRequest) ([]models.Customer, error) // Remove pagination from return
-	ValidateCustomer(req models.CustomerValidationRequest) (bool, error)
-}
+
 
 type customerService struct {
 	repo repository.CustomerRepository
