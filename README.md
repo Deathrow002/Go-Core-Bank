@@ -6,20 +6,30 @@ A modular microservice architecture for core banking operations.
 
 ```
 Go-Core-Bank/
-├── Customer-Service/       # Customer microservice (standalone)
+├── Authentication-Service/ # Authentication microservice (user auth, JWT, password hashing)
 │   ├── cmd/               # Application entry points
 │   ├── internal/          # Private application code
-│   │   ├── customer/      # Customer domain
-│   │   │   ├── controllers/ # HTTP controllers (MVC pattern)
-│   │   │   ├── service/   # Business logic
-│   │   │   ├── repository/ # Data access
-│   │   │   └── models/    # Domain models
-│   │   ├── config/        # Configuration
-│   │   └── database/      # Database utilities
-│   └── pkg/              # Public packages
-├── docker-compose.yml    # Multi-service deployment
-├── Makefile             # Build automation
-└── README.md           # This file
+│   │   ├── authentication/ # Authentication domain
+│   │   │   ├── controller/ # HTTP controllers (Gin handlers)
+│   │   │   ├── service/    # Business logic (password, JWT, validation)
+│   │   │   ├── repository/ # Data access (GORM)
+│   │   │   └── models/     # Domain models (user, roles)
+│   │   └── external/       # External service clients (e.g., Customer Service)
+│   ├── dockerfile          # Docker build file
+│   ├── go.mod              # Go module definition
+│   └── README.md           # Service-specific docs
+├── Account-Service/        # Account microservice (accounts, balances, transactions)
+│   ├── cmd/
+│   ├── internal/
+│   └── README.md
+├── Customer-Service/       # Customer microservice (standalone)
+│   ├── cmd/
+│   ├── internal/
+│   └── pkg/
+│   └── README.md
+├── docker-compose.yml      # Multi-service deployment
+├── Makefile                # Build automation
+└── README.md               # This file
 ```
 
 ## Quick Start
@@ -35,6 +45,12 @@ make docker-stop
 
 ### Building Individual Services
 ```bash
+# Build Authentication Service
+make authentication-service
+
+# Build Account Service
+make account-service
+
 # Build Customer Service
 make customer-service
 
@@ -44,11 +60,36 @@ make build
 
 ## Services
 
+### Authentication Service
+- **Location**: `./Authentication-Service/`
+- **Port**: 8082
+- **Features**:
+  - User registration and login
+  - Password hashing (bcrypt)
+  - JWT authentication
+  - Account lock/unlock
+  - Role-based access (admin, support, user)
+  - Inter-service validation with Customer Service
+- **Documentation**: See `./Authentication-Service/README.md`
+
+### Account Service
+- **Location**: `./Account-Service/`
+- **Port**: 8081
+- **Features**:
+  - Account creation and management
+  - Balance tracking
+  - Transaction history
+  - Integration with Authentication and Customer Services
+- **Documentation**: See `./Account-Service/README.md`
+
 ### Customer Service
 - **Location**: `./Customer-Service/`
 - **Port**: 8080
+- **Features**:
+  - Customer profile management
+  - Customer data validation
+  - Integration with Authentication Service
 - **Documentation**: See `./Customer-Service/README.md`
-- **Architecture**: Clean Architecture with MVC pattern
 
 ## Architecture
 
@@ -65,6 +106,12 @@ Each microservice is completely standalone with its own:
 To work on a specific service, navigate to its directory:
 
 ```bash
+cd Authentication-Service
+# Follow the README in that directory
+
+cd Account-Service
+# Follow the README in that directory
+
 cd Customer-Service
 # Follow the README in that directory
 ```
@@ -72,7 +119,6 @@ cd Customer-Service
 ## Future Services
 
 This architecture supports adding more banking microservices:
-- Account-Service
 - Transaction-Service
 - Loan-Service
 - Card-Service
