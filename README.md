@@ -20,10 +20,19 @@ Go-Core-Bank/
 │   └── README.md           # Service-specific docs
 ├── Account-Service/        # Account microservice (accounts, balances, transactions)
 │   ├── cmd/
+│   │   │   ├── controller/ # HTTP controllers (Gin handlers)
+│   │   │   ├── service/    # Business logic (password, JWT, validation)
+│   │   │   ├── repository/ # Data access (GORM)
+│   │   │   └── models/     # Domain models (user, roles)
+│   │   └── external/       # External service clients (e.g., Customer Service)
 │   ├── internal/
 │   └── README.md
 ├── Customer-Service/       # Customer microservice (standalone)
 │   ├── cmd/
+│   │   │   ├── controller/ # HTTP controllers (Gin handlers)
+│   │   │   ├── service/    # Business logic (password, JWT, validation)
+│   │   │   ├── repository/ # Data access (GORM)
+│   │   │   └── models/     # Domain models (user, roles)
 │   ├── internal/
 │   └── pkg/
 │   └── README.md

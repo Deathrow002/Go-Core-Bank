@@ -1,5 +1,5 @@
 # Build stage - Updated to Go 1.23
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24.4-alpine AS builder
 
 # Install git and ca-certificates for module downloads
 RUN apk add --no-cache git ca-certificates tzdata
