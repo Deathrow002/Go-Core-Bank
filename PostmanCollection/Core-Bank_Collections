@@ -65,6 +65,12 @@
       "value": "",
       "type": "string",
       "description": "JWT Token for authentication"
+    },
+    {
+      "key": "authServiceUrl",
+      "value": "http://localhost:8082",
+      "type": "string",
+      "description": "Base URL for Authentication Service"
     }
   ],
   "item": [
@@ -433,9 +439,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts",
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts",
                   "host": ["{{accountServiceUrl}}"],
-                  "path": ["api", "{{apiVersion}}", "accounts"]
+                  "path": ["api", "v1", "accounts"]
                 },
                 "description": "Create a new account for an existing customer (validates customer exists via REST API)"
               }
@@ -581,9 +587,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts",
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts",
                   "host": ["{{accountServiceUrl}}"],
-                  "path": ["api", "{{apiVersion}}", "accounts"]
+                  "path": ["api", "v1", "accounts"]
                 },
                 "description": "Step 3: Create account for customer"
               }
@@ -593,6 +599,130 @@
         }
       ],
       "description": "Integration test workflows demonstrating inter-service communication"
+    },
+    {
+      "name": "🔐 Authentication Service",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"username\": \"admin\",\n  \"password\": \"admin1234\",\n  \"email\": \"admin@example.com\",\n  \"phone_number\": \"+1-555-0000\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/auth/authenticate",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "auth", "authenticate"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin1234\"\n}"
+            },
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/auth/login",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get By Email",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/authentication/email/{{email}}",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "authentication", "email", "{{email}}"]
+            }
+          }
+        },
+        {
+          "name": "Get By Customer ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/authentication/customer/{{customerId}}",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "authentication", "customer", "{{customerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Authentication",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newadmin\",\n  \"email\": \"newadmin@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/authentication/{{id}}",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "authentication", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lock Account",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/authentication/lock/{{id}}",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "authentication", "lock", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "Unlock Account",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/authentication/unlock/{{id}}",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "authentication", "unlock", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"old_password\": \"admin1234\",\n  \"new_password\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/authentication/change-password/{{username}}",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "authentication", "change-password", "{{username}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Authentication",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{authServiceUrl}}/api/v1/authentication/{{id}}",
+              "host": ["{{authServiceUrl}}"],
+              "path": ["api", "v1", "authentication", "{{id}}"]
+            }
+          }
+        }
+      ]
     }
   ],
   "event": [
