@@ -2,12 +2,16 @@ package main
 
 import (
 	"authentication-service/internal/authentication/controller"
+	"authentication-service/internal/authentication/models"
 	"authentication-service/internal/authentication/repository"
 	"authentication-service/internal/authentication/service"
 	"authentication-service/internal/config"
 	"authentication-service/internal/database"
 	"authentication-service/internal/router"
 	"log"
+	"os"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -23,6 +27,11 @@ func main() {
 	// Initialize database
 	if err := database.InitDatabase(cfg); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	// Initialize admin account if needed
+	if err := initAdminAccount(); err != nil {
+		log.Fatalf("Failed to initialize admin account: %v", err)
 	}
 
 	// Initialize dependencies
@@ -46,4 +55,40 @@ func main() {
 	if err := r.Run(cfg.GetServerAddress()); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
+}
+
+func initAdminAccount() error {
+	db := database.GetDB()
+	var count int64
+	if err := db.Model(&models.Authentication{}).Where("role = ?", "admin").Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		log.Println("Admin account already exists, skipping admin initialization.")
+		return nil
+	}
+
+	// Use env vars or defaults
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	admin := models.Authentication{
+		Username:     adminUsername,
+		PasswordHash: string(hashedPassword),
+		Email:        adminEmail,
+		Role:         string(models.RoleTypeAdmin),
+		IsLocked:     false,
+	}
+
+	if err := db.Create(&admin).Error; err != nil {
+		return err
+	}
+	log.Println("Default admin account created.")
+	return nil
 }
