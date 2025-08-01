@@ -2,6 +2,7 @@ package controller
 
 import (
 	"authentication-service/internal/authentication/service"
+	jwt "authentication-service/internal/utility"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -51,7 +52,23 @@ func (c *AuthenticationController) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, authentication)
+	// Generate JWT token
+	token, err := jwt.GenerateJWT(authentication.Username, authentication.Role)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"token": token,
+		"user": gin.H{
+			"customer_id": authentication.CustomerID,
+			"username":    authentication.Username,
+			"email":       authentication.Email,
+			"role":        authentication.Role,
+			"is_locked":   authentication.IsLocked,
+		},
+	})
 }
 
 // GetByEmail retrieves authentication by email
