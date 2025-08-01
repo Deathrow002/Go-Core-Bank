@@ -22,7 +22,7 @@ type Authentication struct {
 	Email        		string 		`json:"email" gorm:"type:varchar(100);unique;not null;index"`
 	PhoneNumber 		string 		`json:"phone_number" gorm:"type:varchar(20);not null;index"`
 	Role 	 			string 		`json:"role" gorm:"type:varchar(20);not null;default:'user'"`
-	IsLocked 			bool   		`json:"account_non_locked" gorm:"type:boolean;default:true"`
+	IsLocked 			bool   		`json:"is_locked" gorm:"type:boolean;default:false"`
 	CreatedAt   		time.Time 	`json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt   		time.Time 	`json:"updated_at" gorm:"autoUpdateTime"`
 }
