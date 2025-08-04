@@ -9,6 +9,7 @@ import (
 	"authentication-service/internal/database"
 	"authentication-service/internal/router"
 	"log"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -73,9 +74,9 @@ func initAdminAccount() error {
 		return nil
 	}
 
-	adminUsername := "admin"
-	adminPassword := "admin1234"
-	adminEmail := "admin@example.com"
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	adminEmail := os.Getenv("ADMIN_EMAIL")
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 	if err != nil {

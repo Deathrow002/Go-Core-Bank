@@ -3,9 +3,7 @@ package controllers
 import (
 	"account-service/internal/account/models"
 	"account-service/internal/account/service"
-	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -78,15 +76,7 @@ func (c *AccountController) GetAccountsByCustomer(ctx *gin.Context) {
 		return
 	}
 
-	page, pageSize := 1, 10 // Default pagination values
-	if p := ctx.Query("page"); p != "" {
-		fmt.Sscanf(p, "%d", &page)
-	}
-	if ps := ctx.Query("page_size"); ps != "" {
-		fmt.Sscanf(ps, "%d", &pageSize)
-	}
-
-	accounts, total, err := c.service.GetAccountsByCustomer(ctx, customerID, page, pageSize)
+	accounts, total, err := c.service.GetAccountsByCustomer(ctx, customerID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "Failed to retrieve accounts",
@@ -140,11 +130,7 @@ func (c *AccountController) SearchAccounts(ctx *gin.Context) {
 		status = &stat
 	}
 
-	// Parse pagination
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "10"))
-
-	accounts, total, err := c.service.SearchAccounts(ctx, query, accountType, status, page, pageSize)
+	accounts, total, err := c.service.SearchAccounts(ctx, query, accountType, status)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "Failed to search accounts",
@@ -153,14 +139,9 @@ func (c *AccountController) SearchAccounts(ctx *gin.Context) {
 		return
 	}
 
-	totalPages := (int(total) + pageSize - 1) / pageSize
-
 	ctx.JSON(http.StatusOK, gin.H{
 		"accounts":    accounts,
 		"total":       total,
-		"page":        page,
-		"page_size":   pageSize,
-		"total_pages": totalPages,
 	})
 }
 
@@ -219,15 +200,7 @@ func (c *AccountController) DeleteAccount(ctx *gin.Context) {
 }
 
 func (c *AccountController) ListAccounts(ctx *gin.Context) {
-	page, pageSize := 1, 10 // Default pagination values
-	if p := ctx.Query("page"); p != "" {
-		fmt.Sscanf(p, "%d", &page)
-	}
-	if ps := ctx.Query("page_size"); ps != "" {
-		fmt.Sscanf(ps, "%d", &pageSize)
-	}
-
-	accounts, total, err := c.service.ListAccounts(ctx, page, pageSize)
+	accounts, total, err := c.service.ListAccounts(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "Failed to retrieve accounts",

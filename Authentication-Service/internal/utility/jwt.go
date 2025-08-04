@@ -1,12 +1,13 @@
 package jwt
 
 import (
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("your-secret-key") // Use env var in production!
+var jwtSecret = []byte(os.Getenv("JWT_SECRET")) // Use env var in production!
 
 func GenerateJWT(username, role string) (string, error) {
 	claims := jwt.MapClaims{

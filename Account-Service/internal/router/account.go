@@ -2,6 +2,7 @@ package router
 
 import (
 	"account-service/internal/account/controllers"
+	"account-service/internal/account/controllers/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,13 +12,13 @@ func setupAccountRoutes(rg *gin.RouterGroup, accountController *controllers.Acco
     accounts := rg.Group("/accounts")
     {
         // Basic CRUD operations
-        accounts.POST("", accountController.CreateAccount)
+        accounts.POST("", middleware.AuthorizeRole("admin", "support", "user"),accountController.CreateAccount)
         accounts.GET("/:id", accountController.GetAccount)
         accounts.PUT("/:id", accountController.UpdateAccount)
         accounts.DELETE("/:id", accountController.DeleteAccount)
 
         // Listing and search
-        accounts.GET("", accountController.ListAccounts)
+        accounts.GET("", middleware.AuthorizeRole("admin", "support", "user"), accountController.ListAccounts)
         accounts.GET("/search", accountController.SearchAccounts)
 
         // Special queries

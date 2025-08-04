@@ -15,12 +15,12 @@ import (
 type AccountService interface {
     CreateAccount(ctx context.Context, req models.AccountRequest) (*models.Account, error)
     GetAccount(ctx context.Context, id uuid.UUID) (*models.Account, error)
-    GetAccountsByCustomer(ctx context.Context, customerID uuid.UUID, page, pageSize int) ([]models.Account, int64, error)
+    GetAccountsByCustomer(ctx context.Context, customerID uuid.UUID) ([]models.Account, int64, error)
     GetAccountByNumber(ctx context.Context, accountNumber string) (*models.Account, error)
     UpdateAccount(ctx context.Context, id uuid.UUID, req models.AccountRequest) (*models.Account, error)
     DeleteAccount(ctx context.Context, id uuid.UUID) error
-    ListAccounts(ctx context.Context, page, pageSize int) ([]models.Account, int64, error)
-    SearchAccounts(ctx context.Context, query string, accountType *models.AccountType, status *models.AccountStatus, page, pageSize int) ([]models.Account, int64, error)
+    ListAccounts(ctx context.Context) ([]models.Account, int64, error)
+    SearchAccounts(ctx context.Context, query string, accountType *models.AccountType, status *models.AccountStatus) ([]models.Account, int64, error)
 }
 
 type accountService struct {
@@ -88,19 +88,11 @@ func (s *accountService) GetAccount(ctx context.Context, id uuid.UUID) (*models.
     return account, nil
 }
 
-func (s *accountService) GetAccountsByCustomer(ctx context.Context, customerID uuid.UUID, page, pageSize int) ([]models.Account, int64, error) {
-    if page <= 0 {
-        page = 1
-    }
-    if pageSize <= 0 || pageSize > 100 {
-        pageSize = 10
-    }
-
-    accounts, total, err := s.repo.GetByCustomerID(ctx, customerID, page, pageSize)
+func (s *accountService) GetAccountsByCustomer(ctx context.Context, customerID uuid.UUID) ([]models.Account, int64, error) {
+    accounts, total, err := s.repo.GetByCustomerID(ctx, customerID, 0, 0)
     if err != nil {
         return nil, 0, fmt.Errorf("failed to get accounts by customer: %w", err)
     }
-
     return accounts, total, nil
 }
 
@@ -160,15 +152,8 @@ func (s *accountService) DeleteAccount(ctx context.Context, id uuid.UUID) error 
     return nil
 }
 
-func (s *accountService) ListAccounts(ctx context.Context, page, pageSize int) ([]models.Account, int64, error) {
-    if page <= 0 {
-        page = 1
-    }
-    if pageSize <= 0 || pageSize > 100 {
-        pageSize = 10
-    }
-
-    accounts, total, err := s.repo.List(ctx, page, pageSize)
+func (s *accountService) ListAccounts(ctx context.Context) ([]models.Account, int64, error) {
+    accounts, total, err := s.repo.List(ctx, 0, 0)
     if err != nil {
         return nil, 0, fmt.Errorf("failed to list accounts: %w", err)
     }
@@ -176,15 +161,8 @@ func (s *accountService) ListAccounts(ctx context.Context, page, pageSize int) (
     return accounts, total, nil
 }
 
-func (s *accountService) SearchAccounts(ctx context.Context, query string, accountType *models.AccountType, status *models.AccountStatus, page, pageSize int) ([]models.Account, int64, error) {
-    if page <= 0 {
-        page = 1
-    }
-    if pageSize <= 0 || pageSize > 100 {
-        pageSize = 10
-    }
-
-    accounts, total, err := s.repo.Search(ctx, query, accountType, status, page, pageSize)
+func (s *accountService) SearchAccounts(ctx context.Context, query string, accountType *models.AccountType, status *models.AccountStatus) ([]models.Account, int64, error) {
+    accounts, total, err := s.repo.Search(ctx, query, accountType, status, 0, 0)
     if err != nil {
         return nil, 0, fmt.Errorf("failed to search accounts: %w", err)
     }
