@@ -45,23 +45,24 @@ const (
 )
 
 type Account struct {
-    ID           uuid.UUID          `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-    CustomerID   uuid.UUID          `json:"customer_id" gorm:"type:uuid;not null;index"`
-    AccountType  AccountType        `json:"account_type" gorm:"type:varchar(20);not null"`
-    AccountNumber string            `json:"account_number" gorm:"type:varchar(20);unique;not null;index"`
-    Balance      int64              `json:"balance" gorm:"type:bigint;default:0"` // Store in cents
-    Currency     string             `json:"currency" gorm:"type:varchar(3);default:'USD'"`
-    Status       AccountStatus      `json:"status" gorm:"type:varchar(20);default:'active'"`
-    CreatedAt    time.Time          `json:"created_at" gorm:"autoCreateTime"`
-    UpdatedAt    time.Time          `json:"updated_at" gorm:"autoUpdateTime"`
-    DeletedAt    gorm.DeletedAt     `json:"-" gorm:"index"`
+    ID              uuid.UUID          `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+    CustomerID      uuid.UUID          `json:"customer_id" gorm:"type:uuid;not null;index"`
+    AccountType     AccountType        `json:"account_type" gorm:"type:varchar(20);not null"`
+    AccountNumber   string            `json:"account_number" gorm:"type:varchar(20);unique;not null;index"`
+    Balance         int64              `json:"balance" gorm:"type:bigint;default:0"` // Store in cents
+    Currency        string             `json:"currency" gorm:"type:varchar(3);default:'USD'"`
+    Status          AccountStatus      `json:"status" gorm:"type:varchar(20);default:'active'"`
+    CreatedAt       time.Time          `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time          `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt     `json:"-" gorm:"index"`
 }
 
 type AccountRequest struct {
-    CustomerID  uuid.UUID       `json:"customer_id" binding:"required"`
-    AccountType AccountType     `json:"account_type" binding:"required,oneof=savings checking credit loan"`
-    Currency    string          `json:"currency" binding:"omitempty,len=3"`
-    InitialBalance float64      `json:"initial_balance" binding:"omitempty,gt=0"` // In dollars
+    CustomerID      uuid.UUID       `json:"customer_id" binding:"required"`
+    AccountNumber   string        `json:"account_number" binding:"omitempty"`
+    AccountType     AccountType     `json:"account_type" binding:"required,oneof=savings checking credit loan"`
+    Currency        string          `json:"currency" binding:"omitempty,len=3"`
+    InitialBalance  float64      `json:"initial_balance" binding:"omitempty,gt=0"` // In dollars
 }
 
 type AccountResponse struct {

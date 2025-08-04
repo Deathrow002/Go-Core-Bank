@@ -13,9 +13,9 @@ func setupAuthenticationRoutes(rg *gin.RouterGroup, authenticationController *co
 	authGroup := rg.Group("/auth")
 	{
 		{
-			authGroup.POST("/authenticate", middleware.AuthorizeRole("admin", "support", "user"), authenticationController.CreateAuthentication) // POST /api/v1/auth/authenticate
-			authGroup.POST("/login", middleware.AuthorizeRole("admin", "support", "user"), authenticationController.Login) // POST /api/v1/auth/login
-			authGroup.POST("/change-password", middleware.AuthorizeRole("admin", "support", "user"), authenticationController.ChangePassword) // POST /api/v1
+			authGroup.POST("/authenticate", authenticationController.CreateAuthentication) // POST /api/v1/auth/authenticate
+			authGroup.POST("/login", authenticationController.Login) // POST /api/v1/auth/login
+			authGroup.POST("/change-password", authenticationController.ChangePassword) // POST /api/v1
 			
 			authGroup.GET("/email/:email", middleware.AuthorizeRole("admin", "support"),authenticationController.GetByEmail) // GET /api
 			authGroup.GET("/customer/:customerID", middleware.AuthorizeRole("admin", "support"), authenticationController.GetByCustomerID) // GET

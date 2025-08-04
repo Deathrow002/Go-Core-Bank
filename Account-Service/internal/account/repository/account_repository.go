@@ -3,6 +3,7 @@ package repository
 import (
 	"account-service/internal/account/models"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -72,19 +73,16 @@ func (r *accountRepository) Delete(ctx context.Context, id uuid.UUID) error {
     return r.db.WithContext(ctx).Delete(&models.Account{}, "id = ?", id).Error
 }
 
-func (r *accountRepository) List(ctx context.Context, page, pageSize int) ([]models.Account, int64, error) {
+func (r *accountRepository) List(ctx context.Context) ([]models.Account, int64, error) {
     var accounts []models.Account
     var total int64
 
     // Count total records
     r.db.WithContext(ctx).Model(&models.Account{}).Count(&total)
 
-    // Get paginated results
-    offset := (page - 1) * pageSize
+    // Get all results (no pagination)
     err := r.db.WithContext(ctx).
         Order("created_at DESC").
-        Offset(offset).
-        Limit(pageSize).
         Find(&accounts).Error
 
     return accounts, total, err
@@ -125,9 +123,9 @@ func (r *accountRepository) Search(ctx context.Context, query string, accountTyp
 }
 
 // Additional methods for account operations
-func (r *accountRepository) UpdateBalance(ctx context.Context, accountID uuid.UUID, newBalance int64) error {
+func (r *accountRepository) UpdateBalance(ctx context.Context, AccountNumber string, newBalance int64) error {
     return r.db.WithContext(ctx).Model(&models.Account{}).
-        Where("id = ?", accountID).
+        Where("account_number = ?", AccountNumber).
         Update("balance", newBalance).Error
 }
 
@@ -156,13 +154,18 @@ func (r *accountRepository) UpdateStatus(ctx context.Context, accountID uuid.UUI
         Update("status", status).Error
 }
 
-func (r *accountRepository) CheckAccountExists(ctx context.Context, customerID uuid.UUID, accountType models.AccountType) (bool, error) {
-    var count int64
+func (r *accountRepository) CheckAccountExists(ctx context.Context, AccountNumber string) (bool, error) {
+    var account models.Account
     err := r.db.WithContext(ctx).Model(&models.Account{}).
-        Where("customer_id = ? AND account_type = ? AND status != ?", customerID, accountType, models.AccountStatusClosed).
-        Count(&count).Error
-    
-    return count > 0, err
+        Where("account_number = ?", AccountNumber).
+        First(&account).Error
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return false, nil // Account does not exist
+        }
+        return false, fmt.Errorf("failed to check account existence: %w", err)
+    }
+    return true, nil // Account exists
 }
 
 func (r *accountRepository) GetAccountsWithLowBalance(ctx context.Context, threshold int64, page, pageSize int) ([]models.Account, int64, error) {

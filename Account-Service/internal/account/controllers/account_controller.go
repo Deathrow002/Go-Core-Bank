@@ -215,6 +215,55 @@ func (c *AccountController) ListAccounts(ctx *gin.Context) {
 	})
 }
 
+func (c *AccountController) ValidateAccount(ctx *gin.Context) {
+	var req models.AccountRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Invalid request body",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	Validated , err := c.service.ValidateAccount(ctx, req.AccountNumber)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Validation failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"valid": Validated,
+	})
+}
+
+func (c *AccountController) UpdateBalance(ctx *gin.Context) {
+	var req models.AccountRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Invalid request body",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	if err := c.service.UpdateBalance(ctx, req.AccountNumber, int64(req.InitialBalance* 100)); err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "Failed to update balance",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Balance updated successfully",
+	})
+}
+
 // ErrorResponse represents an error response
 type ErrorResponse struct {
 	Error   string `json:"error"`

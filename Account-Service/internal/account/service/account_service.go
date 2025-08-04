@@ -21,6 +21,9 @@ type AccountService interface {
     DeleteAccount(ctx context.Context, id uuid.UUID) error
     ListAccounts(ctx context.Context) ([]models.Account, int64, error)
     SearchAccounts(ctx context.Context, query string, accountType *models.AccountType, status *models.AccountStatus) ([]models.Account, int64, error)
+    UpdateAccountStatus(ctx context.Context, id uuid.UUID, status models.AccountStatus) error
+    UpdateBalance(ctx context.Context, AccountNumber string, newBalance int64) error
+    ValidateAccount(ctx context.Context, AccountNumber string) (bool, error)
 }
 
 type accountService struct {
@@ -153,7 +156,7 @@ func (s *accountService) DeleteAccount(ctx context.Context, id uuid.UUID) error 
 }
 
 func (s *accountService) ListAccounts(ctx context.Context) ([]models.Account, int64, error) {
-    accounts, total, err := s.repo.List(ctx, 0, 0)
+    accounts, total, err := s.repo.List(ctx)
     if err != nil {
         return nil, 0, fmt.Errorf("failed to list accounts: %w", err)
     }
@@ -188,10 +191,23 @@ func (s *accountService) UpdateAccountStatus(ctx context.Context, id uuid.UUID, 
     return nil
 }
 
-func (s *accountService) UpdateBalance(ctx context.Context, accountID uuid.UUID, newBalance int64) error {
-    return s.repo.UpdateBalance(ctx, accountID, newBalance)
+func (s *accountService) UpdateBalance(ctx context.Context, AccountNumber string, newBalance int64) error {
+    return s.repo.UpdateBalance(ctx, AccountNumber, newBalance)
 }
 
-func (s *accountService) CheckAccountExists(ctx context.Context, customerID uuid.UUID, accountType models.AccountType) (bool, error) {
-    return s.repo.CheckAccountExists(ctx, customerID, accountType)
+func (s *accountService) ValidateAccount(ctx context.Context, AccountNumber string) (bool, error) {
+    if AccountNumber == "" {
+        return false, errors.New("account number is required")
+    }
+
+    exists, err := s.repo.CheckAccountExists(ctx, AccountNumber)
+    if err != nil {
+        return exists, fmt.Errorf("failed to check account existence: %w", err)
+    }
+
+    if !exists {
+        return exists, errors.New("account does not exist")
+    }
+
+    return exists, nil
 }
