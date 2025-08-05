@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("your-secret-key") // Use env var in production!
+var jwtSecret = []byte(os.Getenv("JWT_SECRET")) // Use env var in production!
 
 func AuthorizeRole(requiredRoles ...string) gin.HandlerFunc {
     return func(c *gin.Context) {

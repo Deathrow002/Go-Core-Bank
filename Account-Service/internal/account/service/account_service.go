@@ -13,7 +13,7 @@ import (
 )
 
 type AccountService interface {
-    CreateAccount(ctx context.Context, req models.AccountRequest) (*models.Account, error)
+    CreateAccount(ctx context.Context, req models.AccountRequest, authToken string) (*models.Account, error)
     GetAccount(ctx context.Context, id uuid.UUID) (*models.Account, error)
     GetAccountsByCustomer(ctx context.Context, customerID uuid.UUID) ([]models.Account, int64, error)
     GetAccountByNumber(ctx context.Context, accountNumber string) (*models.Account, error)
@@ -39,7 +39,7 @@ func NewAccountService(repo repository.AccountRepository, customerClient *extern
     }
 }
 
-func (s *accountService) CreateAccount(ctx context.Context, req models.AccountRequest) (*models.Account, error) {
+func (s *accountService) CreateAccount(ctx context.Context, req models.AccountRequest, authToken string) (*models.Account, error) {    
     // Validate request
     if req.CustomerID == uuid.Nil {
         return nil, errors.New("customer ID is required")
@@ -49,7 +49,7 @@ func (s *accountService) CreateAccount(ctx context.Context, req models.AccountRe
     }
 
     // **Call Customer Service to validate customer exists**
-    customerExists, err := s.customerClient.ValidateCustomer(ctx, req.CustomerID)
+    customerExists, err := s.customerClient.ValidateCustomer(ctx, req.CustomerID, authToken)
     if err != nil {
         return nil, fmt.Errorf("failed to validate customer: %w", err)
     }

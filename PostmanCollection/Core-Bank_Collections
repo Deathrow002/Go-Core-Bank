@@ -168,6 +168,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
                   }
                 ],
                 "body": {
@@ -191,7 +196,13 @@
               "name": "Get Customer by ID",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/{{customerId}}",
                   "host": ["{{baseUrl}}"],
@@ -227,6 +238,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
                   }
                 ],
                 "body": {
@@ -270,7 +286,13 @@
               "name": "List All Customers",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/api/{{apiVersion}}/customers",
                   "host": ["{{baseUrl}}"],
@@ -308,7 +330,13 @@
               "name": "Search Customers",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/api/{{apiVersion}}/customers/search?query=john&status=active",
                   "host": ["{{baseUrl}}"],
@@ -427,6 +455,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
                   }
                 ],
                 "body": {
@@ -450,11 +483,13 @@
               "name": "Get Account by ID",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+                ],
                 "url": {
-                  "raw": "{{accountServiceUrl}}/api/{{apiVersion}}/accounts/{{accountId}}",
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts/{{accountId}}",
                   "host": ["{{accountServiceUrl}}"],
-                  "path": ["api", "{{apiVersion}}", "accounts", "{{accountId}}"]
+                  "path": ["api", "v1", "accounts", "{{accountId}}"]
                 },
                 "description": "Retrieve account details by ID"
               }
@@ -770,6 +805,12 @@
           "    console.log('❌ Error Response:', pm.response.text());",
           "} else {",
           "    console.log('✅ Request successful');",
+          "}",
+          "",
+          "// Store auth token for login requests",
+          "if (pm.response.code === 200) {",
+          "    var json = pm.response.json();",
+          "    pm.collectionVariables.set('authToken', json.token);",
           "}"
         ]
       }

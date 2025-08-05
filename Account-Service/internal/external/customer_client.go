@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -40,7 +41,7 @@ func NewCustomerClient(baseURL string) *CustomerClient {
 }
 
 // ValidateCustomer calls Customer Service to validate if customer exists
-func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.UUID) (bool, error) {
+func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.UUID, authToken string) (bool, error) {
     // Prepare request payload
     reqBody := CustomerValidationRequest{
         CustomerID: customerID,
@@ -61,6 +62,9 @@ func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.U
     // Set headers
     req.Header.Set("Content-Type", "application/json")
     req.Header.Set("Accept", "application/json")
+    req.Header.Set("Authorization", "Bearer "+ authToken)
+    log.Println("Authorization Header in Client Call:", authToken) // Print to console
+
 
     // Make the request
     resp, err := c.httpClient.Do(req)

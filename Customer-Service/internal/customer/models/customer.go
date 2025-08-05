@@ -145,10 +145,7 @@ type CustomerResponse struct {
 // CustomerValidationRequest represents the validation request
 type CustomerValidationRequest struct {
 	// For JSON input (string UUID)
-	CustomerID string `json:"customer_id,omitempty" validate:"omitempty,uuid"`
-
-	// For service layer (parsed UUID)
-	ID uuid.UUID `json:"-" validate:"required"`
+	ID          uuid.UUID      `json:"id"`
 }
 
 // CustomerSearchRequest represents search criteria

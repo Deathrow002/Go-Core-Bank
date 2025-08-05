@@ -17,6 +17,11 @@ func setupHealthRoutes(router *gin.Engine) {
         })
     })
 
+    // Add HEAD /health route for health checks
+	router.HEAD("/health", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
     router.GET("/ready", func(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
             "status": "ready",
