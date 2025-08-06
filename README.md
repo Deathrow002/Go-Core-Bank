@@ -164,7 +164,7 @@ cd Customer-Service
 
 This architecture supports adding more banking microservices:
 - Transaction-Service
-- Distributed Message Queue Integration
+- Distributed Message Queue
 - Loan-Service
 - Card-Service
 - Notification-Service
