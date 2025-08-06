@@ -124,16 +124,13 @@ func (s *customerService) ListCustomers() ([]models.Customer, error) {
 	return customers, nil
 }
 
-// ValidateCustomer checks if a customer exists and returns boolean
-func (s *customerService) ValidateCustomer(req models.CustomerValidationRequest) (bool, error) {
+// ValidateCustomer checks if a customer exists and returns error if not
+func (s *customerService) ValidateCustomer(req models.CustomerValidationRequest) error {
 	err := s.repo.ValidateCustomer(req)
 	if err != nil {
-		if err.Error() == "customer not found" {
-			return false, nil // Customer doesn't exist, but no error occurred
-		}
-		return false, err // Actual error occurred
+		return err
 	}
-	return true, nil // Customer exists
+	return nil
 }
 
 // SearchCustomers searches customers based on criteria (removed pagination)
