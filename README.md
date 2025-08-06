@@ -2,6 +2,8 @@
 
 A modular microservice architecture for core banking operations.
 
+---
+
 ## Project Structure
 
 ```
@@ -20,26 +22,34 @@ Go-Core-Bank/
 │   └── README.md           # Service-specific docs
 ├── Account-Service/        # Account microservice (accounts, balances, transactions)
 │   ├── cmd/
-│   │   │   ├── controller/ # HTTP controllers (Gin handlers)
-│   │   │   ├── service/    # Business logic (password, JWT, validation)
-│   │   │   ├── repository/ # Data access (GORM)
-│   │   │   └── models/     # Domain models (user, roles)
-│   │   └── external/       # External service clients (e.g., Customer Service)
 │   ├── internal/
+│   │   ├── account/
+│   │   │   ├── controllers/ # HTTP controllers (Gin handlers)
+│   │   │   ├── service/     # Business logic
+│   │   │   ├── repository/  # Data access (GORM)
+│   │   │   └── models/      # Domain models
+│   │   └── external/        # External service clients (e.g., Customer Service)
+│   ├── dockerfile
+│   ├── go.mod
 │   └── README.md
 ├── Customer-Service/       # Customer microservice (standalone)
 │   ├── cmd/
-│   │   │   ├── controller/ # HTTP controllers (Gin handlers)
-│   │   │   ├── service/    # Business logic (password, JWT, validation)
-│   │   │   ├── repository/ # Data access (GORM)
-│   │   │   └── models/     # Domain models (user, roles)
 │   ├── internal/
-│   └── pkg/
+│   │   ├── customer/
+│   │   │   ├── controllers/ # HTTP controllers (Gin handlers)
+│   │   │   ├── service/     # Business logic
+│   │   │   ├── repository/  # Data access (GORM)
+│   │   │   └── models/      # Domain models
+│   ├── pkg/
+│   ├── dockerfile
+│   ├── go.mod
 │   └── README.md
 ├── docker-compose.yml      # Multi-service deployment
 ├── Makefile                # Build automation
 └── README.md               # This file
 ```
+
+---
 
 ## Quick Start
 
@@ -67,6 +77,8 @@ make customer-service
 make build
 ```
 
+---
+
 ## Services
 
 ### Authentication Service
@@ -79,6 +91,8 @@ make build
   - Account lock/unlock
   - Role-based access (admin, support, user)
   - Inter-service validation with Customer Service
+- **Environment**:
+  - `CUSTOMER_SERVICE_URL` should be set to `http://customer-service:8080` when running in Docker Compose.
 - **Documentation**: See `./Authentication-Service/README.md`
 
 ### Account Service
@@ -89,6 +103,8 @@ make build
   - Balance tracking
   - Transaction history
   - Integration with Authentication and Customer Services
+- **Environment**:
+  - `CUSTOMER_SERVICE_URL` should be set to `http://customer-service:8080` when running in Docker Compose.
 - **Documentation**: See `./Account-Service/README.md`
 
 ### Customer Service
@@ -100,6 +116,8 @@ make build
   - Integration with Authentication Service
 - **Documentation**: See `./Customer-Service/README.md`
 
+---
+
 ## Architecture
 
 Each microservice is completely standalone with its own:
@@ -109,6 +127,10 @@ Each microservice is completely standalone with its own:
 - Documentation
 - Build system
 - MVC architecture (Controllers, Services, Repositories)
+
+**Inter-service communication** is done via HTTP using Docker Compose service names as hostnames (e.g., `http://customer-service:8080`).
+
+---
 
 ## Development
 
@@ -125,10 +147,24 @@ cd Customer-Service
 # Follow the README in that directory
 ```
 
+---
+
+## Troubleshooting
+
+- **Service-to-service communication in Docker Compose:**  
+  Use service names (e.g., `customer-service:8080`) instead of `localhost` for URLs between services.
+- **Connection refused errors:**  
+  Ensure the target service is running and listening on `0.0.0.0`, and the correct environment variable is set.
+- **JWT errors:**  
+  Ensure all services use the same `JWT_SECRET` and token format.
+
+---
+
 ## Future Services
 
 This architecture supports adding more banking microservices:
 - Transaction-Service
+- Distributed Message Queue Integration
 - Loan-Service
 - Card-Service
 - Notification-Service
