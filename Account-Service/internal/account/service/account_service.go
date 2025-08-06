@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -47,6 +48,8 @@ func (s *accountService) CreateAccount(ctx context.Context, req models.AccountRe
     if req.AccountType == "" {
         return nil, errors.New("account type is required")
     }
+
+    log.Println("Payload in Service:", req)
 
     // **Call Customer Service to validate customer exists**
     customerExists, err := s.customerClient.ValidateCustomer(ctx, req.CustomerID, authToken)

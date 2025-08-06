@@ -17,21 +17,22 @@ type authenticationService struct {
     customerClient *external.CustomerClient // Add customer client
 }
 
-func NewAuthenticationService(repo repository.AuthenticationRepository) AuthenticationService {
-	return &authenticationService{
-		repo: repo,
-	}
+func NewAuthenticationService(repo repository.AuthenticationRepository, customerClient *external.CustomerClient) AuthenticationService {
+    return &authenticationService{
+        repo:           repo,
+        customerClient: customerClient,
+    }
 }
 
 // CreateAuthentication creates a new authentication record with password hashing
-func (s *authenticationService) CreateAuthentication(ctx context.Context, req CreateAuthenticationRequest, authToken string) (*models.Authentication, error) {
+func (s *authenticationService) CreateAuthentication(ctx context.Context, req CreateAuthenticationRequest) (*models.Authentication, error) {
 	// Validate business rules
 	if err := s.validateCreateAuthenticationRequest(req); err != nil {
 		return nil, err
 	}
 
 	// **Call Customer Service to validate customer exists**
-    customerExists, err := s.customerClient.ValidateCustomer(ctx, req.CustomerID, authToken)
+    customerExists, err := s.customerClient.ValidateCustomer(ctx, req.CustomerID, "")
     if err != nil {
         return nil, fmt.Errorf("failed to validate customer: %w", err)
     }

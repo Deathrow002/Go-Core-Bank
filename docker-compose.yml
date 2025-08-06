@@ -58,6 +58,9 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ""
       REDIS_DB: 0
+
+      # External service URLs
+      CUSTOMER_SERVICE_URL: http://customer-service:8080
     ports:
       - "8082:8082"
     depends_on:

@@ -32,6 +32,7 @@ func main() {
 		log.Fatalf("Failed to run database migrations: %v", err)
 	}
 
+	// Initialize admin account after migrations
 	customerServiceURL := os.Getenv("CUSTOMER_SERVICE_URL")
 	if customerServiceURL == "" {
 		customerServiceURL = "http://localhost:8080"
@@ -39,7 +40,11 @@ func main() {
 
 	// Initialize dependencies
 	customerClient := external.NewCustomerClient(customerServiceURL)
+
+	// Get the database instance
 	db := database.GetDB()
+
+	// Initialize account service with customer client
 	accountRepo := repository.NewAccountRepository(db)
 	accountService := service.NewAccountService(accountRepo, customerClient)
 	accountController := controllers.NewAccountController(accountService)

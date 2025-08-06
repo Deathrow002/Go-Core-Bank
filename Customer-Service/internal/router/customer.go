@@ -2,6 +2,7 @@ package router
 
 import (
 	"customer-service/internal/customer/controllers"
+	"customer-service/internal/customer/controllers/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,13 +10,13 @@ import (
 func setupCustomerRoutes(rg *gin.RouterGroup, customerController *controllers.CustomerController) {
 	customerGroup := rg.Group("/customers")
 	{
-		customerGroup.POST("/", customerController.CreateCustomer)
-		customerGroup.GET("/:id", customerController.GetCustomer)
-		customerGroup.PUT("/:id", customerController.UpdateCustomer)
-		customerGroup.DELETE("/:id", customerController.DeleteCustomer)
-		customerGroup.GET("/", customerController.ListCustomers)
+		customerGroup.POST("/", middleware.AuthorizeRole("admin", "support", "user"), customerController.CreateCustomer)
+		customerGroup.GET("/:id", middleware.AuthorizeRole("admin", "support", "user"), customerController.GetCustomer)
+		customerGroup.PUT("/:id", middleware.AuthorizeRole("admin", "support", "user"), customerController.UpdateCustomer)
+		customerGroup.DELETE("/:id", middleware.AuthorizeRole("admin", "support", "user"), customerController.DeleteCustomer)
+		customerGroup.GET("/", middleware.AuthorizeRole("admin", "support", "user"), customerController.ListCustomers)
 		
-		customerGroup.GET("/search", customerController.SearchCustomers)
+		customerGroup.GET("/search", middleware.AuthorizeRole("admin", "support", "user"), customerController.SearchCustomers)
 		customerGroup.POST("/validate", customerController.ValidateCustomer)
 	}
 }

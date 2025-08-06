@@ -3,7 +3,6 @@ package controllers
 import (
 	"account-service/internal/account/models"
 	"account-service/internal/account/service"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,8 +20,6 @@ func NewAccountController(service service.AccountService) *AccountController {
 }
 
 func (c *AccountController) CreateAccount(ctx *gin.Context) {
-	authToken := ctx.GetHeader("Authorization")
-    log.Println("Authorization Header in Controller:", authToken)
 
 	var req models.AccountRequest
 
@@ -34,7 +31,7 @@ func (c *AccountController) CreateAccount(ctx *gin.Context) {
 		return
 	}
 
-	account, err := c.service.CreateAccount(ctx, req, authToken)
+	account, err := c.service.CreateAccount(ctx, req, ctx.GetHeader("Authorization"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Error:   "Failed to create account",

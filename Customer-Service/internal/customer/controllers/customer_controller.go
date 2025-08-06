@@ -3,6 +3,7 @@ package controllers
 import (
 	"customer-service/internal/customer/models"
 	"customer-service/internal/customer/service"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -121,7 +122,9 @@ func (c *CustomerController) ValidateCustomer(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.service.ValidateCustomer(req)
+	log.Println("Validating customer with ID:", req.CustomerID)
+
+	result, err := c.service.ValidateCustomer(req.CustomerID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return

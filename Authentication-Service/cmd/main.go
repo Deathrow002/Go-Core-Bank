@@ -7,6 +7,7 @@ import (
 	"authentication-service/internal/authentication/service"
 	"authentication-service/internal/config"
 	"authentication-service/internal/database"
+	"authentication-service/internal/external"
 	"authentication-service/internal/router"
 	"log"
 	"os"
@@ -39,10 +40,21 @@ func main() {
 		log.Fatalf("Failed to initialize admin account: %v", err)
 	}
 
+	// Get the customer service URL from environment variable or default
+	customerServiceURL := os.Getenv("CUSTOMER_SERVICE_URL")
+	if customerServiceURL == "" {
+		customerServiceURL = "http://localhost:8080"
+	}
+
 	// Initialize dependencies
+	customerClient := external.NewCustomerClient(customerServiceURL)
+
+	// Get the database instance
 	db := database.GetDB()
+
+	// Initialize authentication service with customer client
 	authenticationRepo := repository.NewAuthenticationRepository(db)
-	authenticationService := service.NewAuthenticationService(authenticationRepo)
+	authenticationService := service.NewAuthenticationService(authenticationRepo, customerClient)
 	authenticationController := controller.NewAuthenticationController(authenticationService)
 
 	// Setup router

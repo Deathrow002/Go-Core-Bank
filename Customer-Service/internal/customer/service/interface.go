@@ -13,5 +13,5 @@ type CustomerService interface {
 	DeleteCustomer(id uuid.UUID) error
 	ListCustomers() ([]models.Customer, error)
 	SearchCustomers(req models.CustomerSearchRequest) ([]models.Customer, error)
-	ValidateCustomer(req models.CustomerValidationRequest) (bool, error)
+	ValidateCustomer(id uuid.UUID) (bool, error)
 }

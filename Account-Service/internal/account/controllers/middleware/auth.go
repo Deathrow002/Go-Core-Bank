@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -29,7 +30,8 @@ func AuthorizeRole(requiredRoles ...string) gin.HandlerFunc {
             return jwtSecret, nil
         })
         if err != nil || !token.Valid {
-            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+            log.Println("Authorization Header in Middleware:", authHeader) // Add this for debugging
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
             return
         }
 

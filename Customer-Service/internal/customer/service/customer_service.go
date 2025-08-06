@@ -125,8 +125,8 @@ func (s *customerService) ListCustomers() ([]models.Customer, error) {
 }
 
 // ValidateCustomer checks if a customer exists and returns error if not
-func (s *customerService) ValidateCustomer(req models.CustomerValidationRequest) (bool, error) {
-	valid, err := s.repo.ValidateCustomer(req)
+func (s *customerService) ValidateCustomer(id uuid.UUID) (bool, error) {
+	valid, err := s.repo.ValidateCustomer(id)
 	return valid, err
 }
 

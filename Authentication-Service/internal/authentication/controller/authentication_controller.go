@@ -21,18 +21,18 @@ func NewAuthenticationController(service service.AuthenticationService) *Authent
 // CreateAuthentication creates a new authentication record
 func (c *AuthenticationController) CreateAuthentication(ctx *gin.Context) {
 	var req service.CreateAuthenticationRequest
-
-	authToken := ctx.GetHeader("Authorization")
-
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
 	// Pass gin context and the correct request type
-	authentication, err := c.service.CreateAuthentication(ctx.Request.Context(), req, authToken)
+	authentication, err := c.service.CreateAuthentication(ctx.Request.Context(), req)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, 
+			gin.H{
+				"error": err.Error(),
+			})
 		return
 	}
 

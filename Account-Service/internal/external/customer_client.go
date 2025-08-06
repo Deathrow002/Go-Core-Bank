@@ -21,13 +21,12 @@ type CustomerClient struct {
 
 // CustomerValidationRequest matches the Customer Service request
 type CustomerValidationRequest struct {
-    CustomerID uuid.UUID `json:"customer_id"`
+    CustomerID string `json:"customer_id"`
 }
 
 // CustomerValidationResponse matches the Customer Service response
 type CustomerValidationResponse struct {
-    CustomerID uuid.UUID `json:"customer_id"`
-    Exists     bool      `json:"exists"`
+    Valid     bool      `json:"valid"`
 }
 
 // NewCustomerClient creates a new customer service client
@@ -44,8 +43,11 @@ func NewCustomerClient(baseURL string) *CustomerClient {
 func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.UUID, authToken string) (bool, error) {
     // Prepare request payload
     reqBody := CustomerValidationRequest{
-        CustomerID: customerID,
+        CustomerID: customerID.String(),
     }
+
+    log.Println("Customer ID in Client Call:", customerID) // Print to console
+    log.Println("Customer ID in Body Payload:", reqBody.CustomerID) // Print to console
 
     jsonData, err := json.Marshal(reqBody)
     if err != nil {
@@ -69,6 +71,7 @@ func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.U
     // Make the request
     resp, err := c.httpClient.Do(req)
     if err != nil {
+        log.Println("Error calling customer service:", err)
         return false, fmt.Errorf("failed to call customer service: %w", err)
     }
     defer resp.Body.Close()
@@ -76,19 +79,23 @@ func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.U
     // Read response body
     body, err := io.ReadAll(resp.Body)
     if err != nil {
+        log.Println("Error reading response body:", err)
         return false, fmt.Errorf("failed to read response: %w", err)
     }
 
     // Check status code
     if resp.StatusCode != http.StatusOK {
+        log.Printf("Customer service returned status %d: %s\n", resp.StatusCode, body)
         return false, fmt.Errorf("customer service returned status %d: %s", resp.StatusCode, string(body))
     }
 
     // Parse response
     var response CustomerValidationResponse
     if err := json.Unmarshal(body, &response); err != nil {
+        log.Println("Error decoding response:", err)
         return false, fmt.Errorf("failed to decode response: %w", err)
     }
 
-    return response.Exists, nil
+    log.Printf("Customer validation response: %+v\n", response)
+    return response.Valid, nil
 }

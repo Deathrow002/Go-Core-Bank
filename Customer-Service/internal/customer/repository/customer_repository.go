@@ -15,7 +15,7 @@ type CustomerRepository interface {
 	Create(customer *models.Customer) error
 	GetByID(id uuid.UUID) (*models.Customer, error)
 	GetByEmail(email string) (*models.Customer, error)
-	ValidateCustomer(req models.CustomerValidationRequest) (bool, error)
+	ValidateCustomer(id uuid.UUID) (bool, error)
 	Update(customer *models.Customer) error
 	Delete(id uuid.UUID) error
 	List() ([]models.Customer, error) // Remove pagination parameters
@@ -68,9 +68,9 @@ func (r *customerRepository) GetByEmail(email string) (*models.Customer, error) 
 }
 
 // ValidateCustomer checks if customer exists
-func (r *customerRepository) ValidateCustomer(req models.CustomerValidationRequest) (bool, error) {
+func (r *customerRepository) ValidateCustomer(id uuid.UUID) (bool, error) {
 	var customer models.Customer
-	if err := r.db.Where("ID = ?", req.ID).First(&customer).Error; err != nil {
+	if err := r.db.Where("id = ?", id).First(&customer).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, errors.New("customer not found")
 		}
