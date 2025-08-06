@@ -8,7 +8,7 @@ import (
 )
 
 type AuthenticationService interface {
-	CreateAuthentication(ctx context.Context, req CreateAuthenticationRequest) (*models.Authentication, error)
+	CreateAuthentication(ctx context.Context, req CreateAuthenticationRequest, authToken string) (*models.Authentication, error)
 	ValidateLogin(ctx context.Context, username, password string) (*models.Authentication, error)
 	GetByEmail(ctx context.Context, email string) (*models.Authentication, error)
 	GetByCustomerID(ctx context.Context, customerID string) (*models.Authentication, error)

@@ -22,13 +22,15 @@ func NewAuthenticationController(service service.AuthenticationService) *Authent
 func (c *AuthenticationController) CreateAuthentication(ctx *gin.Context) {
 	var req service.CreateAuthenticationRequest
 
+	authToken := ctx.GetHeader("Authorization")
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
 	// Pass gin context and the correct request type
-	authentication, err := c.service.CreateAuthentication(ctx.Request.Context(), req)
+	authentication, err := c.service.CreateAuthentication(ctx.Request.Context(), req, authToken)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

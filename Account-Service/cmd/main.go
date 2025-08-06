@@ -7,27 +7,16 @@ import (
 	"account-service/internal/config"
 	"account-service/internal/database"
 	"account-service/internal/external"
-	"account-service/internal/router" // Import router package
+	"account-service/internal/router"
 	"log"
 	"os"
 )
 
-// @title Core Banking Account Service API
-// @version 1.0
-// @description A microservice for managing bank accounts
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
-
-// @host localhost:8081
-// @BasePath /api/v1
 func main() {
-	// Load configuration
+	// This is the entry point for the Customer Service application.
+	// The main function initializes the service, sets up the database,
+	// and starts the HTTP server with the configured routes.
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
@@ -38,25 +27,32 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
+	// You should have this line to run migrations:
 	if err := database.AutoMigrate(); err != nil {
 		log.Fatalf("Failed to run database migrations: %v", err)
 	}
-
-	// Initialize dependencies
-	db := database.GetDB()
-	accountRepo := repository.NewAccountRepository(db)
 
 	customerServiceURL := os.Getenv("CUSTOMER_SERVICE_URL")
 	if customerServiceURL == "" {
 		customerServiceURL = "http://localhost:8080"
 	}
-	customerClient := external.NewCustomerClient(customerServiceURL)
 
+	// Initialize dependencies
+	customerClient := external.NewCustomerClient(customerServiceURL)
+	db := database.GetDB()
+	accountRepo := repository.NewAccountRepository(db)
 	accountService := service.NewAccountService(accountRepo, customerClient)
 	accountController := controllers.NewAccountController(accountService)
 
 	// 🎯 **USE SEPARATE ROUTER**
 	r := router.SetupRouter(cfg, accountController)
+
+	// Debug: Print all registered routes
+	routes := r.Routes()
+	log.Println("📋 Registered routes:")
+	for _, route := range routes {
+		log.Printf("  %s %s", route.Method, route.Path)
+	}
 
 	// Start server
 	log.Printf("Starting Account Service on %s", cfg.GetServerAddress())

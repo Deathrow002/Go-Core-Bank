@@ -24,14 +24,14 @@ func NewAuthenticationService(repo repository.AuthenticationRepository) Authenti
 }
 
 // CreateAuthentication creates a new authentication record with password hashing
-func (s *authenticationService) CreateAuthentication(ctx context.Context, req CreateAuthenticationRequest) (*models.Authentication, error) {
+func (s *authenticationService) CreateAuthentication(ctx context.Context, req CreateAuthenticationRequest, authToken string) (*models.Authentication, error) {
 	// Validate business rules
 	if err := s.validateCreateAuthenticationRequest(req); err != nil {
 		return nil, err
 	}
 
 	// **Call Customer Service to validate customer exists**
-    customerExists, err := s.customerClient.ValidateCustomer(ctx, req.CustomerID)
+    customerExists, err := s.customerClient.ValidateCustomer(ctx, req.CustomerID, authToken)
     if err != nil {
         return nil, fmt.Errorf("failed to validate customer: %w", err)
     }

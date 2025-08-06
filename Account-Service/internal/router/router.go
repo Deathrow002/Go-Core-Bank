@@ -27,9 +27,9 @@ func SetupRouter(cfg *config.Config, accountController *controllers.AccountContr
     router := gin.New()
 
     // Add middleware
-    router.Use(middleware.Logger())
-    router.Use(middleware.Recovery())
-    router.Use(middleware.CORS())
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+	router.Use(middleware.CORS())
 
     // Setup routes
     setupHealthRoutes(router)

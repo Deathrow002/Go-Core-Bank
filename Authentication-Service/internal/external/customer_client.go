@@ -39,7 +39,7 @@ func NewCustomerClient(baseURL string) *CustomerClient {
 	}
 }
 
-func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.UUID) (bool, error) {
+func (c *CustomerClient) ValidateCustomer(ctx context.Context, customerID uuid.UUID, authToken string) (bool, error) {
 	// Prepare request payload
 	authHeader := ctx.Value("authToken")
 	log.Println("authHeader:", authHeader) // Print to console

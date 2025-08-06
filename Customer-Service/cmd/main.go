@@ -6,7 +6,7 @@ import (
 	"customer-service/internal/customer/repository"
 	"customer-service/internal/customer/service"
 	"customer-service/internal/database"
-	"customer-service/internal/router" // Import the router package
+	"customer-service/internal/router"
 	"log"
 )
 
