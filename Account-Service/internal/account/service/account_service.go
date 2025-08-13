@@ -214,7 +214,7 @@ func (s *accountService) UpdateBalance(ctx context.Context, accountID uuid.UUID,
         account.Balance -= amount
     case "transfer":
         // For transfers, amount will be positive for the recipient and negative for the sender
-        account.Balance += amount
+        account.Balance = amount
     case "adjustment":
         // Handle balance adjustments
         account.Balance += amount

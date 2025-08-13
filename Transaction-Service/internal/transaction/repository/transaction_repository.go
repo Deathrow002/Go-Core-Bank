@@ -5,6 +5,7 @@ import (
 	"errors"
 	"transaction-service/internal/transaction/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +16,7 @@ type transactionRepository struct {
 type TransactionRepository interface {
 	Create(ctx context.Context, transaction *models.Transaction) error
 	GetByID(ctx context.Context, id string) (*models.Transaction, error)
-	ListByAccNoOwner(ctx context.Context, transaction *models.Transaction) error
+	ListByAccNoOwner(ctx context.Context, accNoOwner uuid.UUID) ([]models.Transaction, error)
 	ListAllTransactions(ctx context.Context) ([]models.Transaction, error)
 }
 
@@ -43,11 +44,12 @@ func (r *transactionRepository) GetByID(ctx context.Context, id string) (*models
 	return &transaction, nil
 }
 
-func (r *transactionRepository) ListByAccNoOwner(ctx context.Context, transaction *models.Transaction) error {
-	if err := r.db.WithContext(ctx).Where("acc_no_owner = ?", transaction.AccNoOwner).Find(transaction).Error; err != nil {
-		return err
+func (r *transactionRepository) ListByAccNoOwner(ctx context.Context, accNoOwner uuid.UUID) ([]models.Transaction, error) {
+	var transactions []models.Transaction
+	if err := r.db.WithContext(ctx).Where("acc_no_owner = ?", accNoOwner).Find(&transactions).Error; err != nil {
+		return nil, err
 	}
-	return nil
+	return transactions, nil
 }
 
 func (r *transactionRepository) ListAllTransactions(ctx context.Context) ([]models.Transaction, error) {

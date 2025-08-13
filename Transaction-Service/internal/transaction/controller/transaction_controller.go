@@ -25,7 +25,14 @@ func (c *TransactionController) CreateTransaction(ctx *gin.Context) {
 		return
 	}
 
-	transaction, err := c.service.CreateTransaction(ctx.Request.Context(), req)
+	// Get and sanitize the token
+    authHeader := ctx.GetHeader("Authorization")
+    token := authHeader
+    if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+        token = authHeader[7:]
+    }
+
+	transaction, err := c.service.CreateTransaction(ctx.Request.Context(), req, token)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transaction", "message": err.Error()})
 		return
@@ -41,7 +48,14 @@ func (c *TransactionController) CreateWithdrawalTransaction(ctx *gin.Context) {
 		return
 	}
 
-	transaction, err := c.service.CreateWithdrawalTransaction(ctx.Request.Context(), req)
+	// Get and sanitize the token
+    authHeader := ctx.GetHeader("Authorization")
+    token := authHeader
+    if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+        token = authHeader[7:]
+    }
+
+	transaction, err := c.service.CreateWithdrawalTransaction(ctx.Request.Context(), req, token)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -57,10 +57,10 @@ func NewBalanceUpdateConsumer(brokers []string, topic, groupID string, accountSv
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:     brokers,
 		Topic:       topic,
-		GroupID:     groupID,
-		MinBytes:    10e3, // 10KB
-		MaxBytes:    10e6, // 10MB
-		StartOffset: kafka.LastOffset,
+		GroupID:     groupID,          // Make sure this is CONSISTENT
+		MinBytes:    10e3,
+		MaxBytes:    10e6,
+		StartOffset: kafka.FirstOffset, // <-- CHANGE THIS to read from beginning
 		MaxWait:     time.Second,
 	})
 
@@ -205,4 +205,9 @@ func (c *BalanceUpdateConsumer) processMessage(ctx context.Context, message kafk
 
 	log.Printf("Successfully updated balance for account %s", update.AccountID)
 	return nil
+}
+
+// ResetOffsets resets the Kafka reader's offsets
+func (c *BalanceUpdateConsumer) ResetOffsets() error {
+	return c.kafkaReader.SetOffset(kafka.FirstOffset)
 }

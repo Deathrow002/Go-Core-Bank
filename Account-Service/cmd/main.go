@@ -64,7 +64,7 @@ func main() {
 	// Kafka consumer setup
 	brokers := []string{"kafka:9092"}
 	topic := "account-balance-update"
-	groupID := "account-service-group"
+	groupID := "account-balance-consumer-fixed" // Use fixed group ID
 
 	consumer, err := consumer.NewBalanceUpdateConsumer(
 		brokers,
