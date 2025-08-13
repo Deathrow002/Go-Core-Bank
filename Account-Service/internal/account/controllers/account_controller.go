@@ -241,27 +241,27 @@ func (c *AccountController) ValidateAccount(ctx *gin.Context) {
 	})
 }
 
-func (c *AccountController) UpdateBalance(ctx *gin.Context) {
-	var req models.AccountRequest
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+func (c *AccountController) GetBalance(ctx *gin.Context) {
+	accountNumber := ctx.Param("account_number")
+	if accountNumber == "" {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{
-			Error:   "Invalid request body",
-			Message: err.Error(),
+			Error:   "Account number is required",
+			Message: "Please provide a valid account number",
 		})
 		return
 	}
 
-	if err := c.service.UpdateBalance(ctx, req.AccountNumber, int64(req.InitialBalance* 100)); err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{
-			Error:   "Failed to update balance",
+	balance, err := c.service.ValidateAccountBalance(ctx, accountNumber)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, ErrorResponse{
+			Error:   "Account not found",
 			Message: err.Error(),
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Balance updated successfully",
+		"balance": balance,
 	})
 }
 

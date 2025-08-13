@@ -49,7 +49,7 @@ type Account struct {
     CustomerID      uuid.UUID          `json:"customer_id" gorm:"type:uuid;not null;index"`
     AccountType     AccountType        `json:"account_type" gorm:"type:varchar(20);not null"`
     AccountNumber   string            `json:"account_number" gorm:"type:varchar(20);unique;not null;index"`
-    Balance         int64              `json:"balance" gorm:"type:bigint;default:0"` // Store in cents
+    Balance         float64              `json:"balance" gorm:"type:bigint;default:0"` // Store in cents
     Currency        string             `json:"currency" gorm:"type:varchar(3);default:'USD'"`
     Status          AccountStatus      `json:"status" gorm:"type:varchar(20);default:'active'"`
     CreatedAt       time.Time          `json:"created_at" gorm:"autoCreateTime"`

@@ -493,6 +493,154 @@
                 },
                 "description": "Retrieve account details by ID"
               }
+            },
+            {
+              "name": "Update Account",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization", 
+                    "value": "Bearer {{authToken}}", 
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"active\",\n  \"account_type\": \"checking\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts/{{accountId}}",
+                  "host": ["{{accountServiceUrl}}"],
+                  "path": ["api", "v1", "accounts", "{{accountId}}"]
+                },
+                "description": "Update an existing account"
+              }
+            },
+            {
+              "name": "Delete Account",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts/{{accountId}}",
+                  "host": ["{{accountServiceUrl}}"],
+                  "path": ["api", "v1", "accounts", "{{accountId}}"]
+                },
+                "description": "Delete an account by ID"
+              }
+            },
+            {
+              "name": "List All Accounts",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts",
+                  "host": ["{{accountServiceUrl}}"],
+                  "path": ["api", "v1", "accounts"]
+                },
+                "description": "List all accounts (admins and support only)"
+              }
+            },
+            {
+              "name": "Search Accounts",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts/search?type=savings&status=active",
+                  "host": ["{{accountServiceUrl}}"],
+                  "path": ["api", "v1", "accounts", "search"],
+                  "query": [
+                    {
+                      "key": "type",
+                      "value": "savings",
+                      "description": "Account type filter"
+                    },
+                    {
+                      "key": "status",
+                      "value": "active",
+                      "description": "Account status filter"
+                    }
+                  ]
+                },
+                "description": "Search accounts by criteria (admins and support only)"
+              }
+            },
+            {
+              "name": "Get Account by Number",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts/number/{{accountNumber}}",
+                  "host": ["{{accountServiceUrl}}"],
+                  "path": ["api", "v1", "accounts", "number", "{{accountNumber}}"]
+                },
+                "description": "Retrieve account details by account number"
+              }
+            },
+            {
+              "name": "Get Accounts by Customer",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{accountServiceUrl}}/api/v1/accounts/customer/{{customerId}}",
+                  "host": ["{{accountServiceUrl}}"],
+                  "path": ["api", "v1", "accounts", "customer", "{{customerId}}"]
+                },
+                "description": "Get all accounts owned by a specific customer"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Account Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{accountServiceUrl}}/health",
+              "host": ["{{accountServiceUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check Account Service health status"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Account Service is healthy', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.service).to.eql('account-service');",
+                  "    pm.expect(responseJson.status).to.eql('healthy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
             }
           ]
         }
@@ -758,6 +906,224 @@
           }
         }
       ]
+    },
+    {
+      "name": "💸 Transaction Service",
+      "item": [
+        {
+          "name": "Transaction Management",
+          "item": [
+            {
+              "name": "Create Transaction",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test('Transaction created successfully', function () {",
+                      "    const responseJson = pm.response.json();",
+                      "    pm.expect(responseJson).to.have.property('id');",
+                      "    pm.expect(responseJson).to.have.property('acc_no_owner');",
+                      "    pm.expect(responseJson).to.have.property('acc_no_target');",
+                      "    pm.expect(responseJson).to.have.property('amount');",
+                      "    pm.expect(responseJson).to.have.property('type');",
+                      "});",
+                      "",
+                      "// Store transaction ID for subsequent requests",
+                      "if (pm.response.code === 201) {",
+                      "    const responseJson = pm.response.json();",
+                      "    if (responseJson.id) {",
+                      "        pm.collectionVariables.set('transactionId', responseJson.id);",
+                      "        console.log('✅ Stored transaction ID:', responseJson.id);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "// Ensure we have account IDs before creating transaction",
+                      "const accountId = pm.collectionVariables.get('accountId');",
+                      "if (!accountId) {",
+                      "    console.log('⚠️ Warning: No account ID available. Transaction may fail.');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"acc_no_owner\": \"{{accountId}}\",\n  \"acc_no_target\": \"{{accountId}}\",\n  \"amount\": 100.00,\n  \"type\": \"transfer\",\n  \"description\": \"Test transaction\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{transactionServiceUrl}}/api/v1/transactions/transaction",
+                  "host": ["{{transactionServiceUrl}}"],
+                  "path": ["api", "v1", "transactions", "transaction"]
+                },
+                "description": "Create a new transaction between accounts"
+              }
+            },
+            {
+              "name": "Create Deposit",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"acc_no_owner\": \"{{accountId}}\",\n  \"amount\": 500.00,\n  \"description\": \"Deposit funds\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{transactionServiceUrl}}/api/v1/transactions/deposit",
+                  "host": ["{{transactionServiceUrl}}"],
+                  "path": ["api", "v1", "transactions", "deposit"]
+                },
+                "description": "Create a deposit transaction"
+              }
+            },
+            {
+              "name": "Create Withdrawal",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"acc_no_owner\": \"{{accountId}}\",\n  \"amount\": 200.00,\n  \"description\": \"Withdrawal funds\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{transactionServiceUrl}}/api/v1/transactions/withdraw",
+                  "host": ["{{transactionServiceUrl}}"],
+                  "path": ["api", "v1", "transactions", "withdraw"]
+                },
+                "description": "Create a withdrawal transaction"
+              }
+            },
+            {
+              "name": "Get Transaction by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{transactionServiceUrl}}/api/v1/transactions/{{transactionId}}",
+                  "host": ["{{transactionServiceUrl}}"],
+                  "path": ["api", "v1", "transactions", "{{transactionId}}"]
+                },
+                "description": "Retrieve transaction details by ID"
+              }
+            },
+            {
+              "name": "Get All Transactions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{transactionServiceUrl}}/api/v1/transactions",
+                  "host": ["{{transactionServiceUrl}}"],
+                  "path": ["api", "v1", "transactions"]
+                },
+                "description": "List all transactions"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Transaction Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{transactionServiceUrl}}/health",
+              "host": ["{{transactionServiceUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check Transaction Service health status"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Transaction Service is healthy', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.service).to.eql('transaction-service');",
+                  "    pm.expect(responseJson.status).to.eql('healthy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Transaction Service endpoints for managing bank transactions"
     }
   ],
   "event": [

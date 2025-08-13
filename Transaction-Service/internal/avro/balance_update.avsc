@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "BalanceUpdate",
+  "fields": [
+    {"name": "account_id", "type": "string"},
+    {"name": "amount", "type": "double"},
+    {"name": "type", "type": "string"}
+  ]
+}

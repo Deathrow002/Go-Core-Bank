@@ -7,7 +7,9 @@ import (
 	"account-service/internal/config"
 	"account-service/internal/database"
 	"account-service/internal/external"
+	"account-service/internal/external/consumer"
 	"account-service/internal/router"
+	"context"
 	"log"
 	"os"
 )
@@ -58,6 +60,27 @@ func main() {
 	for _, route := range routes {
 		log.Printf("  %s %s", route.Method, route.Path)
 	}
+
+	// Kafka consumer setup
+	brokers := []string{"kafka:9092"}
+	topic := "account-balance-update"
+	groupID := "account-service-group"
+
+	consumer, err := consumer.NewBalanceUpdateConsumer(
+		brokers,
+		topic,
+		groupID,
+		accountService,
+	)
+	if err != nil {
+		log.Fatalf("Failed to create balance update consumer: %v", err)
+	}
+
+	// Start consuming messages
+	consumer.Start(context.Background())
+
+	// Ensure the consumer stops gracefully
+	defer consumer.Stop()
 
 	// Start server
 	log.Printf("Starting Account Service on %s", cfg.GetServerAddress())

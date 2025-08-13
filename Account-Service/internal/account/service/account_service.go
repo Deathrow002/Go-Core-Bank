@@ -23,8 +23,9 @@ type AccountService interface {
     ListAccounts(ctx context.Context) ([]models.Account, int64, error)
     SearchAccounts(ctx context.Context, query string, accountType *models.AccountType, status *models.AccountStatus) ([]models.Account, int64, error)
     UpdateAccountStatus(ctx context.Context, id uuid.UUID, status models.AccountStatus) error
-    UpdateBalance(ctx context.Context, AccountNumber string, newBalance int64) error
+    UpdateBalance(ctx context.Context, accountID uuid.UUID, amount float64, txType string) error
     ValidateAccount(ctx context.Context, AccountNumber string) (bool, error)
+    ValidateAccountBalance(ctx context.Context, accountNumber string) (float64, error)
 }
 
 type accountService struct {
@@ -194,8 +195,32 @@ func (s *accountService) UpdateAccountStatus(ctx context.Context, id uuid.UUID, 
     return nil
 }
 
-func (s *accountService) UpdateBalance(ctx context.Context, AccountNumber string, newBalance int64) error {
-    return s.repo.UpdateBalance(ctx, AccountNumber, newBalance)
+func (s *accountService) UpdateBalance(ctx context.Context, accountID uuid.UUID, amount float64, txType string) error {
+    // Get the account
+    account, err := s.repo.GetByID(ctx, accountID)
+    if err != nil {
+        return fmt.Errorf("failed to get account: %w", err)
+    }
+    
+    // Update the balance based on transaction type
+    switch txType {
+    case "deposit":
+        account.Balance += amount
+    case "withdrawal":
+        account.Balance -= amount
+    case "transfer":
+        // For transfers, amount will be positive for the recipient and negative for the sender
+        account.Balance += amount
+    default:
+        return fmt.Errorf("unknown transaction type: %s", txType)
+    }
+    
+    // Update the account
+    if err := s.repo.Update(ctx, account); err != nil {
+        return fmt.Errorf("failed to update account: %w", err)
+    }
+    
+    return nil
 }
 
 func (s *accountService) ValidateAccount(ctx context.Context, AccountNumber string) (bool, error) {
@@ -213,4 +238,15 @@ func (s *accountService) ValidateAccount(ctx context.Context, AccountNumber stri
     }
 
     return exists, nil
+}
+
+func (s *accountService) ValidateAccountBalance(ctx context.Context, accountNumber string) (float64, error) {
+    account, err := s.GetAccountByNumber(ctx, accountNumber)
+    if err != nil {
+        return 0, fmt.Errorf("failed to get account by number: %w", err)
+    } 
+    if account == nil {
+        return 0, errors.New("account not found")
+    }
+    return account.Balance, nil
 }

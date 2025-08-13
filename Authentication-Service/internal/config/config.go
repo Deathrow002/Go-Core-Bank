@@ -57,12 +57,12 @@ func Load() (*Config, error) {
 		},
 		Server: ServerConfig{
 			Host: getEnv("SERVER_HOST", "localhost"),
-			Port: getEnvAsInt("SERVER_PORT", 8080),
+			Port: getEnvAsInt("SERVER_PORT", 8082),
 		},
 		App: AppConfig{
 			Environment: getEnv("APP_ENV", "development"),
 			LogLevel:    getEnv("LOG_LEVEL", "info"),
-			JWTSecret:   getEnv("JWT_SECRET", "your_jwt_secret_key_here"),
+			JWTSecret:   getEnv("JWT_SECRET", os.Getenv("JWT_SECRET")),
 		},
 	}
 
