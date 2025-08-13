@@ -62,15 +62,17 @@ func (s *transactionService) CreateTransaction(ctx context.Context, req models.C
 		AccNoOwner:		req.AccNoOwner,
 		AccNoTarget:	req.AccNoTarget,
 		Amount:			req.Amount,
-		Type:			req.Type,
+		Type:			models.TransactionTypeTransfer,
 		Description:	req.Description,
 		CreatedAt:		time.Now(),
 	}
 
+	log.Printf("Sending Kafka message with type='%s'", string(transaction.Type))
 	if err := producer.SendBalanceUpdate(s.kafkaWriter, transaction.AccNoOwner, OwnerBalance, string(transaction.Type)); err != nil {
     log.Printf("Failed to send balance update to Kafka: %v", err)
 	}
 
+	log.Printf("Sending Kafka message with type='%s'", string(transaction.Type))
 	if err := producer.SendBalanceUpdate(s.kafkaWriter, transaction.AccNoTarget, TargetBalance, string(transaction.Type)); err != nil {
 		// Log the error
 		log.Printf("Failed to send balance update to Kafka: %v", err)
@@ -97,7 +99,7 @@ func (s *transactionService) CreateWithdrawalTransaction(ctx context.Context, re
 		AccNoOwner:		req.AccNoOwner,
 		AccNoTarget:	uuid.Nil, // No target account for withdrawal
 		Amount:			req.Amount,
-		Type:			req.Type,
+		Type:			models.TransactionTypeWithdrawal,
 		Description:	req.Description,
 		CreatedAt:		time.Now(),
 	}
@@ -111,6 +113,7 @@ func (s *transactionService) CreateWithdrawalTransaction(ctx context.Context, re
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
+	log.Printf("Sending Kafka message with type='%s'", string(transaction.Type))
 	// After saving transaction
 	if err := producer.SendBalanceUpdate(s.kafkaWriter, transaction.AccNoOwner, transaction.Amount, string(transaction.Type)); err != nil {
 		// Log the error
@@ -129,7 +132,7 @@ func (s *transactionService) CreateDepositTransaction(ctx context.Context,req mo
 		AccNoOwner:		req.AccNoOwner,
 		AccNoTarget:	uuid.Nil, // No target account for deposit
 		Amount:			req.Amount,
-		Type:			req.Type,
+		Type:			models.TransactionTypeDeposit,
 		Description:	req.Description,
 		CreatedAt:		time.Now(),
 	}
@@ -143,7 +146,7 @@ func (s *transactionService) CreateDepositTransaction(ctx context.Context,req mo
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
-	// After saving transaction
+	log.Printf("Sending Kafka message with type='%s'", string(transaction.Type))
 	if err := producer.SendBalanceUpdate(s.kafkaWriter, transaction.AccNoOwner, transaction.Amount, string(transaction.Type)); err != nil {
 		// Log the error
 		log.Printf("Failed to send balance update to Kafka: %v", err)

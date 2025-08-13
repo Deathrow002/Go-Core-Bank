@@ -2,9 +2,9 @@ package consumer
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +18,18 @@ type BalanceUpdateMessage struct {
 	Amount    float64 `json:"amount"`
 	Type      string  `json:"type"`
 }
+
+var balanceUpdateAvroSchema = `
+{
+  "type": "record",
+  "name": "BalanceUpdate",
+  "fields": [
+    {"name": "accountid", "type": "string"},
+    {"name": "amount", "type": "double"},
+    {"name": "type", "type": "string"}
+  ]
+}
+`
 
 // AccountService is the interface required to update account balances
 type AccountService interface {
@@ -36,18 +48,7 @@ type BalanceUpdateConsumer struct {
 // NewBalanceUpdateConsumer creates a new balance update consumer
 func NewBalanceUpdateConsumer(brokers []string, topic, groupID string, accountSvc AccountService) (*BalanceUpdateConsumer, error) {
 	// Create the Avro codec
-	schema := `
-	{
-	  "type": "record",
-	  "name": "BalanceUpdate",
-	  "fields": [
-	    {"name": "accountid", "type": "string"},
-	    {"name": "amount", "type": "double"},
-	    {"name": "type", "type": "string"}
-	  ]
-	}
-	`
-	codec, err := goavro.NewCodec(schema)
+	codec, err := goavro.NewCodec(balanceUpdateAvroSchema)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Avro codec: %w", err)
 	}
@@ -62,6 +63,25 @@ func NewBalanceUpdateConsumer(brokers []string, topic, groupID string, accountSv
 		StartOffset: kafka.LastOffset,
 		MaxWait:     time.Second,
 	})
+
+	// Create topic if it doesn't exist
+	conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
+	if err != nil {
+		log.Printf("Failed to connect to Kafka: %v", err)
+	} else {
+		defer conn.Close()
+		topicConfigs := []kafka.TopicConfig{
+			{
+				Topic:             topic,
+				NumPartitions:     1,
+				ReplicationFactor: 1,
+			},
+		}
+		err = conn.CreateTopics(topicConfigs...)
+		if err != nil {
+			log.Printf("Topic creation failed (may already exist): %v", err)
+		}
+	}
 
 	return &BalanceUpdateConsumer{
 		kafkaReader: reader,
@@ -97,6 +117,9 @@ func (c *BalanceUpdateConsumer) consumeMessages(ctx context.Context) {
 	log.Println("Balance update consumer started")
 	defer log.Println("Balance update consumer stopped")
 
+	// Add a backoff counter
+	var consecutiveTimeouts int
+
 	for {
 		select {
 		case <-c.stopChan:
@@ -109,10 +132,23 @@ func (c *BalanceUpdateConsumer) consumeMessages(ctx context.Context) {
 
 			if err != nil {
 				if err != context.DeadlineExceeded {
+					// Only log errors that aren't timeouts
 					log.Printf("Error reading Kafka message: %v", err)
+				} else {
+					// For timeouts, log at debug level or with lower frequency
+					if time.Now().Second()%60 == 0 { // Log once per minute
+						log.Printf("No messages received in the last minute")
+					}
+					consecutiveTimeouts++
+					// Exponential backoff: wait longer when repeatedly finding no messages
+					backoffTime := time.Duration(math.Min(float64(consecutiveTimeouts*2), 30)) * time.Second
+					time.Sleep(backoffTime)
 				}
 				continue
 			}
+
+			// Reset the backoff counter on successful read
+			consecutiveTimeouts = 0
 
 			// Process the message
 			if err := c.processMessage(ctx, message); err != nil {
@@ -143,6 +179,15 @@ func (c *BalanceUpdateConsumer) processMessage(ctx context.Context, message kafk
 		Type:      nativeMap["type"].(string),
 	}
 
+	// Add validation for empty transaction type
+	if update.Type == "" {
+		log.Printf("Warning: Received message with empty transaction type, defaulting to 'adjustment'")
+		update.Type = "adjustment" // Provide a default
+	}
+
+	// Log more details about the received message for debugging
+	log.Printf("Message details: %+v", nativeMap)
+
 	log.Printf("Processing balance update: Account=%s, Amount=%.2f, Type=%s",
 		update.AccountID, update.Amount, update.Type)
 
@@ -160,13 +205,4 @@ func (c *BalanceUpdateConsumer) processMessage(ctx context.Context, message kafk
 
 	log.Printf("Successfully updated balance for account %s", update.AccountID)
 	return nil
-}
-
-// Helper method to convert native Avro to JSON for debugging
-func prettyPrintMessage(native interface{}) string {
-	jsonBytes, err := json.MarshalIndent(native, "", "  ")
-	if err != nil {
-		return fmt.Sprintf("[Error marshaling JSON: %v]", err)
-	}
-	return string(jsonBytes)
 }

@@ -20,7 +20,7 @@
     },
     {
       "key": "transactionServiceUrl",
-      "value": "http://localhost:8082",
+      "value": "http://localhost:8083",
       "type": "string",
       "description": "Base URL for Transaction Service"
     },
@@ -793,7 +793,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"username\": \"admin\",\n  \"password\": \"admin1234\",\n  \"email\": \"admin@example.com\",\n  \"phone_number\": \"+1-555-0000\",\n  \"role\": \"admin\"\n}"
+              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"username\": \"admin\",\n  \"password\": \"admin123\",\n  \"email\": \"admin@example.com\",\n  \"phone_number\": \"+1-555-0000\",\n  \"role\": \"admin\"\n}"
             },
             "url": {
               "raw": "{{authServiceUrl}}/api/v1/auth/authenticate",

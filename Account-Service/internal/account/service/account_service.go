@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -202,15 +203,23 @@ func (s *accountService) UpdateBalance(ctx context.Context, accountID uuid.UUID,
         return fmt.Errorf("failed to get account: %w", err)
     }
     
-    // Update the balance based on transaction type
-    switch txType {
+    // Log the exact transaction type for debugging
+    log.Printf("Processing balance update with type: '%s'", txType)
+    
+    // Validate and update the balance based on transaction type
+    switch strings.ToLower(strings.TrimSpace(txType)) {
     case "deposit":
         account.Balance += amount
-    case "withdrawal":
+    case "withdrawal", "withdraw":
         account.Balance -= amount
     case "transfer":
         // For transfers, amount will be positive for the recipient and negative for the sender
         account.Balance += amount
+    case "adjustment":
+        // Handle balance adjustments
+        account.Balance += amount
+    case "":
+        return fmt.Errorf("transaction type cannot be empty")
     default:
         return fmt.Errorf("unknown transaction type: %s", txType)
     }

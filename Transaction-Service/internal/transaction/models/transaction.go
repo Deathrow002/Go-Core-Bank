@@ -30,5 +30,4 @@ type CreateTransactionRequest struct {
 	AccNoTarget uuid.UUID		`json:"acc_no_target"`
 	Amount      float64			`json:"amount"`
 	Description string			`json:"description"`
-	Type        TransactionType	`json:"type"`
 }
