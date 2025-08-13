@@ -29,6 +29,7 @@ Go-Core-Bank/
 │   │   │   ├── repository/  # Data access (GORM)
 │   │   │   └── models/      # Domain models
 │   │   └── external/        # External service clients (e.g., Customer Service)
+│   │       └── consumer/    # Kafka consumer for balance updates
 │   ├── dockerfile
 │   ├── go.mod
 │   └── README.md
@@ -44,7 +45,22 @@ Go-Core-Bank/
 │   ├── dockerfile
 │   ├── go.mod
 │   └── README.md
-├── docker-compose.yml      # Multi-service deployment
+├── Transaction-Service/    # Transaction microservice (transfers, deposits, withdrawals)
+│   ├── cmd/
+│   ├── internal/
+│   │   ├── transaction/
+│   │   │   ├── controller/  # HTTP controllers (Gin handlers)
+│   │   │   ├── service/     # Business logic
+│   │   │   ├── repository/  # Data access (GORM)
+│   │   │   └── models/      # Domain models
+│   │   └── external/
+│   │       └── producer/    # Kafka producer for balance updates
+│   ├── dockerfile
+│   ├── go.mod
+│   └── README.md
+├── PostmanCollection/      # API documentation and test collections
+│   └── Core-Bank_Collections  # Postman collection for all services
+├── docker-compose.yml      # Multi-service deployment with Kafka
 ├── Makefile                # Build automation
 └── README.md               # This file
 ```
@@ -116,6 +132,18 @@ make build
   - Integration with Authentication Service
 - **Documentation**: See `./Customer-Service/README.md`
 
+### Transaction Service
+- **Location**: `./Transaction-Service/`
+- **Port**: 8083
+- **Features**:
+  - Funds transfers between accounts
+  - Deposits and withdrawals
+  - Transaction history
+  - Integration with Account and Customer Services
+- **Environment**:
+  - `KAFKA_BROKER_URL` should be set to `kafka:9092` when running in Docker Compose.
+- **Documentation**: See `./Transaction-Service/README.md`
+
 ---
 
 ## Architecture
@@ -145,6 +173,9 @@ cd Account-Service
 
 cd Customer-Service
 # Follow the README in that directory
+
+cd Transaction-Service
+# Follow the README in that directory
 ```
 
 ---
@@ -163,10 +194,6 @@ cd Customer-Service
 ## Future Services
 
 This architecture supports adding more banking microservices:
-- Transaction-Service
-- Distributed Message Queue
-- Loan-Service
-- Card-Service
 - Notification-Service
 
 Each service will follow the same standalone pattern with MVC architecture.
