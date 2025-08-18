@@ -8,75 +8,90 @@ A modular microservice architecture for core banking operations.
 
 ```
 Go-Core-Bank/
-├── Authentication-Service/ # Authentication microservice (user auth, JWT, password hashing)
-│   ├── cmd/               # Application entry points
-│   ├── internal/          # Private application code
-│   │   ├── authentication/ # Authentication domain
-│   │   │   ├── controller/ # HTTP controllers (Gin handlers)
-│   │   │   ├── service/    # Business logic (password, JWT, validation)
-│   │   │   ├── repository/ # Data access (GORM)
-│   │   │   └── models/     # Domain models (user, roles)
-│   │   └── external/       # External service clients (e.g., Customer Service)
-│   ├── dockerfile          # Docker build file
-│   ├── go.mod              # Go module definition
-│   └── README.md           # Service-specific docs
-├── Account-Service/        # Account microservice (accounts, balances, transactions)
+├── Authentication-Service/     # Authentication microservice (user auth, JWT, password hashing)
+│   ├── cmd/                    # Application entry points
+│   ├── internal/               # Private application code
+│   │   ├── authentication/     # Authentication domain
+│   │   │   ├── controller/     # HTTP controllers (Gin handlers)
+│   │   │   ├── service/        # Business logic (password, JWT, validation)
+│   │   │   ├── repository/     # Data access (GORM)
+│   │   │   └── models/         # Domain models (user, roles)
+│   │   └── external/           # External service clients (e.g., Customer Service)
+│   ├── dockerfile              # Docker build file
+│   ├── go.mod                  # Go module definition
+│   └── README.md               # Service-specific docs
+├── Account-Service/            # Account microservice (accounts, balances, transactions)
 │   ├── cmd/
 │   ├── internal/
 │   │   ├── account/
-│   │   │   ├── controllers/ # HTTP controllers (Gin handlers)
-│   │   │   ├── service/     # Business logic
-│   │   │   ├── repository/  # Data access (GORM)
-│   │   │   └── models/      # Domain models
-│   │   └── external/        # External service clients (e.g., Customer Service)
-│   │       └── consumer/    # Kafka consumer for balance updates
+│   │   │   ├── controllers/    # HTTP controllers (Gin handlers)
+│   │   │   ├── service/        # Business logic
+│   │   │   ├── repository/     # Data access (GORM)
+│   │   │   └── models/         # Domain models
+│   │   └── external/           # External service clients (e.g., Customer Service)
+│   │       └── consumer/       # Kafka consumer for balance updates
 │   ├── dockerfile
 │   ├── go.mod
 │   └── README.md
-├── Customer-Service/       # Customer microservice (standalone)
+├── Customer-Service/           # Customer microservice (standalone)
 │   ├── cmd/
 │   ├── internal/
 │   │   ├── customer/
-│   │   │   ├── controllers/ # HTTP controllers (Gin handlers)
-│   │   │   ├── service/     # Business logic
-│   │   │   ├── repository/  # Data access (GORM)
-│   │   │   └── models/      # Domain models
+│   │   │   ├── controllers/    # HTTP controllers (Gin handlers)
+│   │   │   ├── service/        # Business logic
+│   │   │   ├── repository/     # Data access (GORM)
+│   │   │   └── models/         # Domain models
 │   ├── pkg/
 │   ├── dockerfile
 │   ├── go.mod
 │   └── README.md
-├── Transaction-Service/    # Transaction microservice (transfers, deposits, withdrawals)
+├── Transaction-Service/        # Transaction microservice (transfers, deposits, withdrawals)
 │   ├── cmd/
 │   ├── internal/
 │   │   ├── transaction/
-│   │   │   ├── controller/  # HTTP controllers (Gin handlers)
-│   │   │   ├── service/     # Business logic
-│   │   │   ├── repository/  # Data access (GORM)
-│   │   │   └── models/      # Domain models
+│   │   │   ├── controller/     # HTTP controllers (Gin handlers)
+│   │   │   ├── service/        # Business logic
+│   │   │   ├── repository/     # Data access (GORM)
+│   │   │   └── models/         # Domain models
 │   │   └── external/
-│   │       └── producer/    # Kafka producer for balance updates
+│   │       └── producer/       # Kafka producer for balance updates
 │   ├── dockerfile
 │   ├── go.mod
 │   └── README.md
-├── PostmanCollection/      # API documentation and test collections
-│   └── Core-Bank_Collections  # Postman collection for all services
-├── docker-compose.yml      # Multi-service deployment with Kafka
-├── Makefile                # Build automation
-└── README.md               # This file
+├── PostmanCollection/          # API documentation and test collections
+│   └── Core-Bank_Collections   # Postman collection for all services
+├── K8s/                        # Kubernetes manifests
+├── prometheus/
+│   └── prometheus.yml          # Prometheus configuration
+├── docker-compose.yml          # Multi-service deployment with Kafka
+├── Makefile                    # Build automation
+└── README.md                   # This file
 ```
 
 ---
 
 ## Quick Start
 
+
 ### Using Docker (Recommended)
 ```bash
-# Run all services
+# Run all services (including monitoring)
 make docker-run
 
 # Stop all services
 make docker-stop
 ```
+
+### Monitoring with Prometheus & Grafana
+
+Prometheus and Grafana are included in `docker-compose.yml` for monitoring and visualization.
+
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000      (login: admin / password: admin)
+
+Prometheus scrapes metrics from each microservice (if `/metrics` endpoint is exposed). You can add custom metrics to your Go services using Prometheus client libraries.
+
+Grafana can be used to visualize metrics and create dashboards. Add Prometheus as a data source in Grafana and import dashboards as needed.
 
 ### Building Individual Services
 ```bash
@@ -146,6 +161,7 @@ make build
 
 ---
 
+
 ## Architecture
 
 Each microservice is completely standalone with its own:
@@ -157,6 +173,8 @@ Each microservice is completely standalone with its own:
 - MVC architecture (Controllers, Services, Repositories)
 
 **Inter-service communication** is done via HTTP using Docker Compose service names as hostnames (e.g., `http://customer-service:8080`).
+
+**Monitoring** is provided by Prometheus (metrics collection) and Grafana (visualization). See `prometheus.yml` for scrape targets and configure your services to expose metrics endpoints for best results.
 
 ---
 
