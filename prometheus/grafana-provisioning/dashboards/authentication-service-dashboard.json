@@ -1,0 +1,52 @@
+{
+  "title": "Authentication-Service Dashboard",
+  "description": "Focus: login, tokens, failures.",
+  "tags": ["authentication", "core-bank"],
+  "schemaVersion": 37,
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Login Success vs Failure Rate",
+      "targets": [
+        {"expr": "sum(rate(auth_login_success_total[5m]))", "refId": "A", "legendFormat": "Success"},
+        {"expr": "sum(rate(auth_login_failure_total[5m]))", "refId": "B", "legendFormat": "Failure"}
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Error Code Distribution",
+      "targets": [
+        {"expr": "sum(rate(auth_error_code_total[5m])) by (code)", "refId": "A"}
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top IPs Failing Authentication",
+      "targets": [
+        {"expr": "topk(10, sum(rate(auth_login_failure_total{ip!=''}[5m])) by (ip))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Token Issuance Rate",
+      "targets": [
+        {"expr": "sum(rate(auth_token_issued_total[5m]))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Average Authentication Latency",
+      "targets": [
+        {"expr": "avg(auth_latency_seconds)", "refId": "A"}
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Failed Login Reasons",
+      "targets": [
+        {"expr": "sum(rate(auth_login_failure_reason_total[5m])) by (reason)", "refId": "A"}
+      ]
+    }
+  ]
+}

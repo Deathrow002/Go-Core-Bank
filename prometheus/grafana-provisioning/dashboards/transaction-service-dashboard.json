@@ -1,0 +1,51 @@
+{
+  "title": "Transaction-Service Dashboard",
+  "description": "Focus: payments, money movement.",
+  "tags": ["transaction", "core-bank"],
+  "schemaVersion": 37,
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Transaction Volume Trend",
+      "targets": [
+        {"expr": "sum(rate(transaction_total[1m]))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Transaction Value Trend",
+      "targets": [
+        {"expr": "sum(rate(transaction_value_total[1m]))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Success Rate",
+      "targets": [
+        {"expr": "sum(rate(transaction_success_total[5m])) / sum(rate(transaction_total[5m]))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Customers/Regions by Volume",
+      "targets": [
+        {"expr": "topk(10, sum(rate(transaction_total[5m])) by (customer_id, region))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Failure Reasons",
+      "targets": [
+        {"expr": "sum(rate(transaction_failure_total[5m])) by (reason)", "refId": "A"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Average Transaction Processing Time",
+      "targets": [
+        {"expr": "avg(transaction_processing_time_seconds)", "refId": "A"}
+      ]
+    }
+  ]
+}

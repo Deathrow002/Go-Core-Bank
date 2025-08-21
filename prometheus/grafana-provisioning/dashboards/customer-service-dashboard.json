@@ -1,0 +1,47 @@
+{
+  "title": "Customer-Service Dashboard",
+  "description": "Focus: customer data management.",
+  "tags": ["customer", "core-bank"],
+  "schemaVersion": 37,
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "heatmap",
+      "title": "Latency Distribution (p50, p90, p99)",
+      "targets": [
+        {"expr": "histogram_quantile(0.5, sum(rate(customer_latency_bucket[5m])) by (le))", "refId": "A", "legendFormat": "p50"},
+        {"expr": "histogram_quantile(0.9, sum(rate(customer_latency_bucket[5m])) by (le))", "refId": "B", "legendFormat": "p90"},
+        {"expr": "histogram_quantile(0.99, sum(rate(customer_latency_bucket[5m])) by (le))", "refId": "C", "legendFormat": "p99"}
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Customer Activity",
+      "targets": [
+        {"expr": "topk(10, sum(rate(customer_activity_total[5m])) by (customer_id))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "API Calls Trend",
+      "targets": [
+        {"expr": "sum(rate(customer_api_calls_total[5m]))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Update Operations",
+      "targets": [
+        {"expr": "sum(rate(customer_profile_update_total[5m]))", "refId": "A"},
+        {"expr": "sum(rate(customer_kyc_update_total[5m]))", "refId": "B"}
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Error Rates by Endpoint",
+      "targets": [
+        {"expr": "sum(rate(customer_error_total[5m])) by (endpoint)", "refId": "A"}
+      ]
+    }
+  ]
+}

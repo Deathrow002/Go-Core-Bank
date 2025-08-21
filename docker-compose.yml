@@ -299,7 +299,11 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./prometheus/grafana-provisioning/:/etc/grafana/provisioning/
-      - ./prometheus/grafana-provisioning/dashboards/core-bank-dashboard.json:/etc/grafana/provisioning/dashboards/core-bank-dashboard.json
+      - ./prometheus/grafana-provisioning/dashboards/account-service-dashboard.json:/etc/grafana/provisioning/dashboards/account-service-dashboard.json
+      - ./prometheus/grafana-provisioning/dashboards/authentication-service-dashboard.json:/etc/grafana/provisioning/dashboards/authentication-service-dashboard.json
+      - ./prometheus/grafana-provisioning/dashboards/customer-service-dashboard.json:/etc/grafana/provisioning/dashboards/customer-service-dashboard.json
+      - ./prometheus/grafana-provisioning/dashboards/transaction-service-dashboard.json:/etc/grafana/provisioning/dashboards/transaction-service-dashboard.json
+
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     restart: unless-stopped

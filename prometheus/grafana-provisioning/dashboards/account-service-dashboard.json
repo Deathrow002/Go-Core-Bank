@@ -1,0 +1,53 @@
+{
+  "title": "Account-Service Dashboard",
+  "description": "Focus: account creation & lifecycle.",
+  "tags": ["account", "core-bank"],
+  "schemaVersion": 37,
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "barchart",
+      "title": "New Accounts by Region",
+      "targets": [
+        {"expr": "sum(rate(account_created_total[1h])) by (region)", "refId": "A"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Account Activity Trend",
+      "targets": [
+        {"expr": "sum(rate(account_activity_total[5m]))", "refId": "A"}
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Success vs Failure Rate",
+      "targets": [
+        {"expr": "sum(rate(account_created_total[5m]))", "refId": "A", "legendFormat": "Success"},
+        {"expr": "sum(rate(account_creation_failed_total[5m]))", "refId": "B", "legendFormat": "Failure"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Account Update Events",
+      "targets": [
+        {"expr": "sum(rate(account_update_total[5m]))", "refId": "A"},
+        {"expr": "sum(rate(account_password_reset_total[5m]))", "refId": "B"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Average Request Latency",
+      "targets": [
+        {"expr": "avg(account_request_latency_seconds)", "refId": "A"}
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Error Rate (400/500)",
+      "targets": [
+        {"expr": "sum(rate(account_error_total[5m])) by (code)", "refId": "A"}
+      ]
+    }
+  ]
+}
