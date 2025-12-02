@@ -1,20 +1,26 @@
 {
   "info": {
     "name": "Go-Core-Bank API Collections",
-    "description": "Complete Core Banking Microservices API Collection\n\nThis collection contains all endpoints for the Go-Core-Bank platform including Customer Service, Account Service, Transaction Service, and other banking microservices.\n\n**Services:**\n- Customer Service (Port 8080)\n- Account Service (Port 8081)\n- Transaction Service (Port 8082)\n\n**Features:**\n- Automated testing\n- Dynamic variable management\n- Inter-service validation\n- Error handling",
+    "description": "Complete Core Banking Microservices API Collection\n\nThis collection contains all endpoints for the Go-Core-Bank platform including Customer Service, Account Service, Transaction Service, and other banking microservices.\n\n**Services:**\n- Account Service (Port 8080)\n- Authentication Service (Port 8081)\n- Customer Service (Port 8082)\n- Transaction Service (Port 8083)\n\n**Features:**\n- Automated testing\n- Dynamic variable management\n- Inter-service validation\n- Error handling",
     "version": "2.1.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080",
+      "value": "http://localhost:8082",
       "type": "string",
       "description": "Base URL for Customer Service"
     },
     {
-      "key": "accountServiceUrl",
+      "key": "authServiceUrl",
       "value": "http://localhost:8081",
+      "type": "string",
+      "description": "Base URL for Authentication Service"
+    },
+    {
+      "key": "accountServiceUrl",
+      "value": "http://localhost:8080",
       "type": "string",
       "description": "Base URL for Account Service"
     },
@@ -65,12 +71,6 @@
       "value": "",
       "type": "string",
       "description": "JWT Token for authentication"
-    },
-    {
-      "key": "authServiceUrl",
-      "value": "http://localhost:8082",
-      "type": "string",
-      "description": "Base URL for Authentication Service"
     }
   ],
   "item": [
