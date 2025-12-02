@@ -108,9 +108,61 @@ make customer-service
 make build
 ```
 
----
 
-## Services
+## Kubernetes Deployment
+
+Use helper scripts under `Deployment/`.
+
+### Deploy (`Deployment/deploy.sh`)
+- `-n <namespace>`: target namespace (default `core-bank`).
+- `-y`: auto-confirm.
+- `-w`: wait for deployments to be ready.
+- `-c`: preflight check images exist in registry.
+- `-b`: auto-build missing images with `dockerbuild.sh`.
+
+Examples:
+```
+bash Deployment/deploy.sh -n core-bank -c -b -y -w
+```
+
+### Build Images (`Deployment/dockerbuild.sh`)
+- `-t <tag>`: image tag (defaults to git SHA or `latest`).
+- `-r <registry>`: registry prefix (e.g., `ghcr.io/yourorg/core-bank`).
+- `-p`: push after build.
+- `-s <svc1,svc2>`: build subset.
+- `-n`: no cache.
+- `-j`: parallel.
+
+Examples:
+```
+bash Deployment/dockerbuild.sh -r ghcr.io/yourorg/core-bank -t v1.0.0 -p
+bash Deployment/dockerbuild.sh -s account-service,transaction-service -t dev
+```
+
+### Cleanup (`Deployment/clearup.sh`)
+- `-n <namespace>`: target namespace.
+- `-F`: delete namespace.
+- `-P`: delete PVC/PV.
+- `-d`: dry-run.
+- `-y`: auto-confirm.
+- `-w`: wait termination.
+
+### Service Discovery on K8s
+Inside the namespace, use service DNS names:
+- `authentication-service:8082`
+- `customer-service:8080`
+- `account-service:8081`
+- `transaction-service:8083`
+
+Keep env vars consistent across services:
+- `AUTHENTICATION_SERVICE_URL=http://authentication-service:8082`
+- `CUSTOMER_SERVICE_URL=http://customer-service:8080`
+- `ACCOUNT_SERVICE_URL=http://account-service:8081`
+- `TRANSACTION_SERVICE_URL=http://transaction-service:8083`
+
+### Network Policies (recommended)
+Add baseline deny-all, allow intra-namespace app ports, and allow egress to data services (Postgres 5432, Redis 6379, Kafka 9092). Place under `K8s/network-policy.yaml` and include in deploy manifests.
+
 
 ### Authentication Service
 - **Location**: `./Authentication-Service/`
@@ -135,7 +187,7 @@ make build
   - Transaction history
   - Integration with Authentication and Customer Services
 - **Environment**:
-  - `CUSTOMER_SERVICE_URL` should be set to `http://customer-service:8080` when running in Docker Compose.
+  - `CUSTOMER_SERVICE_URL` should be set to `http://account-service:8080` when running in Docker Compose.
 - **Documentation**: See `./Account-Service/README.md`
 
 ### Customer Service

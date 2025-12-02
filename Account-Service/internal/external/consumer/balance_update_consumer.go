@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,11 +39,11 @@ type AccountService interface {
 
 // BalanceUpdateConsumer handles consuming and processing balance updates
 type BalanceUpdateConsumer struct {
-	kafkaReader   *kafka.Reader
-	accountSvc    AccountService
-	avroCodec     *goavro.Codec
-	isRunning     bool
-	stopChan      chan struct{}
+	kafkaReader *kafka.Reader
+	accountSvc  AccountService
+	avroCodec   *goavro.Codec
+	isRunning   bool
+	stopChan    chan struct{}
 }
 
 // NewBalanceUpdateConsumer creates a new balance update consumer
@@ -55,13 +56,12 @@ func NewBalanceUpdateConsumer(brokers []string, topic, groupID string, accountSv
 
 	// Create Kafka reader
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:     brokers,
-		Topic:       topic,
-		GroupID:     groupID,          // Make sure this is CONSISTENT
-		MinBytes:    10e3,
-		MaxBytes:    10e6,
-		StartOffset: kafka.FirstOffset, // <-- CHANGE THIS to read from beginning
-		MaxWait:     time.Second,
+		Brokers:  brokers,
+		Topic:    topic,
+		GroupID:  groupID, // With a GroupID, the consumer group manages offsets
+		MinBytes: 10e3,
+		MaxBytes: 10e6,
+		MaxWait:  time.Second,
 	})
 
 	// Create topic if it doesn't exist
@@ -117,6 +117,9 @@ func (c *BalanceUpdateConsumer) consumeMessages(ctx context.Context) {
 	log.Println("Balance update consumer started")
 	defer log.Println("Balance update consumer stopped")
 
+	// Small initial delay to allow group to stabilize after join
+	time.Sleep(2 * time.Second)
+
 	// Add a backoff counter
 	var consecutiveTimeouts int
 
@@ -131,19 +134,26 @@ func (c *BalanceUpdateConsumer) consumeMessages(ctx context.Context) {
 			cancel()
 
 			if err != nil {
-				if err != context.DeadlineExceeded {
-					// Only log errors that aren't timeouts
-					log.Printf("Error reading Kafka message: %v", err)
-				} else {
-					// For timeouts, log at debug level or with lower frequency
-					if time.Now().Second()%60 == 0 { // Log once per minute
-						log.Printf("No messages received in the last minute")
-					}
+				if err == context.DeadlineExceeded {
+					// Reduce noise: only logarithmic backoff info occasionally
 					consecutiveTimeouts++
-					// Exponential backoff: wait longer when repeatedly finding no messages
+					if consecutiveTimeouts%30 == 0 { // log every 30 timeouts
+						log.Printf("No messages yet (timeouts=%d)", consecutiveTimeouts)
+					}
 					backoffTime := time.Duration(math.Min(float64(consecutiveTimeouts*2), 30)) * time.Second
 					time.Sleep(backoffTime)
+					continue
 				}
+				// Transient group coordination issues
+				if strings.Contains(err.Error(), "Group Coordinator Not Available") {
+					log.Printf("Coordinator not available yet; retrying shortly")
+					time.Sleep(2 * time.Second)
+					continue
+				}
+				log.Printf("Error reading Kafka message: %v", err)
+				consecutiveTimeouts++
+				backoffTime := time.Duration(math.Min(float64(consecutiveTimeouts*2), 30)) * time.Second
+				time.Sleep(backoffTime)
 				continue
 			}
 

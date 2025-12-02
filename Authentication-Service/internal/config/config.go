@@ -24,6 +24,7 @@ type DatabaseConfig struct {
 	Password string
 	DBName   string
 	SSLMode  string
+	URL      string
 }
 
 // ServerConfig holds server configuration
@@ -46,14 +47,24 @@ func Load() (*Config, error) {
 		log.Println("No .env file found, using environment variables")
 	}
 
+	// Prefer DATABASE_URL if provided; otherwise map POSTGRES_* to DB_*
+	dbURL := getEnv("DATABASE_URL", "")
+	host := getEnv("DB_HOST", getEnv("POSTGRES_HOST", "localhost"))
+	port := getEnvAsInt("DB_PORT", getEnvAsInt("POSTGRES_PORT", 5432))
+	user := getEnv("DB_USER", getEnv("POSTGRES_USER", "postgres"))
+	password := getEnv("DB_PASSWORD", getEnv("POSTGRES_PASSWORD", ""))
+	dbname := getEnv("DB_NAME", getEnv("POSTGRES_DB", "core_bank"))
+	sslmode := getEnv("DB_SSL_MODE", "disable")
+
 	config := &Config{
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnvAsInt("DB_PORT", 5432),
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", ""),
-			DBName:   getEnv("DB_NAME", "core_bank"),
-			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
+			Host:     host,
+			Port:     port,
+			User:     user,
+			Password: password,
+			DBName:   dbname,
+			SSLMode:  sslmode,
+			URL:      dbURL,
 		},
 		Server: ServerConfig{
 			Host: getEnv("SERVER_HOST", "localhost"),
@@ -71,6 +82,9 @@ func Load() (*Config, error) {
 
 // GetDatabaseDSN returns the database connection string
 func (c *Config) GetDatabaseDSN() string {
+	if c.Database.URL != "" {
+		return c.Database.URL
+	}
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Database.Host,

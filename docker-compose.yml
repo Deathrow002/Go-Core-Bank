@@ -33,9 +33,9 @@ services:
       # Database configuration
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: core_bank
+      DB_USER: corebankuser
+      DB_PASSWORD: corebankpass
+      DB_NAME: corebankdb
       DB_SSL_MODE: disable
       
       # Server configuration
@@ -90,9 +90,9 @@ services:
       # Database configuration
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: core_bank
+      DB_USER: corebankuser
+      DB_PASSWORD: corebankpass
+      DB_NAME: corebankdb
       DB_SSL_MODE: disable
       
       # Server configuration
@@ -133,9 +133,9 @@ services:
       # Database configuration
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: core_bank
+      DB_USER: corebankuser
+      DB_PASSWORD: corebankpass
+      DB_NAME: corebankdb
       DB_SSL_MODE: disable
       
       # Server configuration
@@ -181,9 +181,9 @@ services:
       # Database configuration
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: core_bank
+      DB_USER: corebankuser
+      DB_PASSWORD: corebankpass
+      DB_NAME: corebankdb
       DB_SSL_MODE: disable
       
       # Server configuration

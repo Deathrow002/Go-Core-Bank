@@ -61,8 +61,8 @@ func main() {
 		log.Printf("  %s %s", route.Method, route.Path)
 	}
 
-	// Kafka consumer setup
-	brokers := []string{"kafka:9092"}
+	// Kafka consumer setup (use full cluster DNS as requested)
+	brokers := []string{"kafka.core-bank.svc.cluster.local:9092"}
 	topic := "account-balance-update"
 	groupID := "account-balance-consumer-fixed" // Use fixed group ID
 

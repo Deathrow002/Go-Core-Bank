@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-service
+  namespace: core-bank
+  labels:
+    app: authentication-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication-service
+  template:
+    metadata:
+      labels:
+        app: authentication-service
+        version: v1
+    spec:
+      containers:
+      - name: authentication-service
+        image: authentication-service:latest # Build from Authentication-Service/dockerfile
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SERVER_HOST
+          value: "0.0.0.0"
+        - name: SERVER_PORT
+          value: "8081"
+        - name: POSTGRES_HOST
+          value: "postgres"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: "corebankuser"
+        - name: POSTGRES_PASSWORD
+          value: "corebankpass"
+        - name: POSTGRES_DB
+          value: "corebankdb"
+        - name: DATABASE_URL
+          value: "postgres://corebankuser:corebankpass@postgres:5432/corebankdb?sslmode=disable"
+        ports:
+        - containerPort: 8081
+        # Probes for better lifecycle management
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          failureThreshold: 30
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo "Waiting for Postgres..."; sleep 5; done;']
+      - name: wait-for-customer-service
+        image: busybox
+        command: ['sh', '-c', 'until nc -z customer-service 8082; do echo "Waiting for Customer Service..."; sleep 5; done;']
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication-service
+spec:
+  selector:
+    app: authentication-service
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081

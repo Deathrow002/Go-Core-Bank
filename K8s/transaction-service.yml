@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+  namespace: core-bank
+  labels:
+    app: transaction-service
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+        version: v1
+    spec:
+      containers:
+      - name: transaction-service
+        image: transaction-service:latest # Build from Transaction-Service/Dockerfile
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POSTGRES_HOST
+          value: "postgres"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: "corebankuser"
+        - name: POSTGRES_PASSWORD
+          value: "corebankpass"
+        - name: POSTGRES_DB
+          value: "corebankdb"
+        - name: DATABASE_URL
+          value: "postgres://corebankuser:corebankpass@postgres:5432/corebankdb?sslmode=disable"
+        ports:
+        - containerPort: 8083
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo "Waiting for Postgres..."; sleep 5; done;']
+      - name: wait-for-kafka
+        image: busybox
+        command: ['sh', '-c', 'until nc -z kafka 9092; do echo "Waiting for Kafka..."; sleep 5; done;']
+      - name: wait-for-account-service
+        image: busybox
+        command: ['sh', '-c', 'until nc -z account-service 8080; do echo "Waiting for Account Service..."; sleep 5; done;']
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-service
+spec:
+  selector:
+    app: transaction-service
+  ports:
+    - protocol: TCP
+      port: 8083
+      targetPort: 8083

@@ -51,7 +51,7 @@ func main() {
 
 	// Kafka writer setup
 	kafkaWriter := &kafka.Writer{
-		Addr:     kafka.TCP("kafka:9092"),
+		Addr:     kafka.TCP("kafka.core-bank.svc.cluster.local:9092"),
 		Topic:    "account-balance-update",
 		Balancer: &kafka.LeastBytes{},
 	}
