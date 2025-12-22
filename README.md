@@ -114,51 +114,140 @@ make build
 Use helper scripts under `Deployment/`.
 
 ### Deploy (`Deployment/deploy.sh`)
-- `-n <namespace>`: target namespace (default `core-bank`).
-- `-y`: auto-confirm.
-- `-w`: wait for deployments to be ready.
-- `-c`: preflight check images exist in registry.
-- `-b`: auto-build missing images with `dockerbuild.sh`.
 
-Examples:
+**Flags:**
+- `-n <namespace>`: Target namespace (default: `core-bank`)
+- `-y`: Auto-confirm (skip interactive prompt)
+- `-w`: Wait for deployments to be ready
+- `-c`: Check images exist before deploy
+- `-b`: Auto-build missing images using `dockerbuild.sh`
+- `-L <target>`: Load built images to local cluster (`docker-desktop`, `minikube`, or `kind`)
+- `-I`: Install nginx ingress controller (ingress-nginx namespace)
+- `-G`: Port-forward ingress controller to `localhost:8080` after deploy
+- `-S`: Port-forward services to `localhost:18080-18083` after deploy
+- `-h`: Show help
+
+**Running from PowerShell (Windows):**
+```powershell
+# Use Git Bash to run the script
+& "C:\Program Files\Git\bin\bash.exe" Deployment/deploy.sh -n core-bank -c -b -L docker-desktop -I -w -G -S -y
 ```
-bash Deployment/deploy.sh -n core-bank -c -b -y -w
+
+**Running from Git Bash or Linux/macOS:**
+```bash
+# Full deployment with auto-build, ingress, and port-forwards
+bash Deployment/deploy.sh -n core-bank -c -b -L docker-desktop -I -w -G -S -y
+
+# Minimal deployment (no ingress, no port-forwards)
+bash Deployment/deploy.sh -n core-bank -y
+
+# Deploy with auto-build for missing images
+bash Deployment/deploy.sh -n core-bank -c -b -L docker-desktop -w -y
+```
+
+**Access Methods:**
+
+After deploying with `-S` (service port-forwards):
+- Account Service: `http://localhost:18080/health`
+- Authentication Service: `http://localhost:18081/health`
+- Customer Service: `http://localhost:18082/health`
+- Transaction Service: `http://localhost:18083/health`
+
+After deploying with `-G` (ingress port-forward), use Host headers:
+```bash
+curl -H 'Host: account-service.local' http://localhost:8080/health
+curl -H 'Host: authentication-service.local' http://localhost:8080/health
+curl -H 'Host: customer-service.local' http://localhost:8080/health
+curl -H 'Host: transaction-service.local' http://localhost:8080/health
 ```
 
 ### Build Images (`Deployment/dockerbuild.sh`)
-- `-t <tag>`: image tag (defaults to git SHA or `latest`).
-- `-r <registry>`: registry prefix (e.g., `ghcr.io/yourorg/core-bank`).
-- `-p`: push after build.
-- `-s <svc1,svc2>`: build subset.
-- `-n`: no cache.
-- `-j`: parallel.
 
-Examples:
-```
+**Flags:**
+- `-t <tag>`: Image tag (defaults to git SHA or `latest`)
+- `-r <registry>`: Registry prefix (e.g., `ghcr.io/yourorg/core-bank`)
+- `-p`: Push images after build
+- `-s <svc1,svc2>`: Build subset of services (comma-separated)
+- `-n`: Disable build cache (adds `--no-cache`)
+- `-j`: Parallel build (background jobs)
+- `-L <target>`: Load built images to local cluster (`docker-desktop`, `minikube`, or `kind`)
+- `-h`: Show help
+
+**Examples:**
+```bash
+# Build and push all services with version tag
 bash Deployment/dockerbuild.sh -r ghcr.io/yourorg/core-bank -t v1.0.0 -p
+
+# Build subset for local development
 bash Deployment/dockerbuild.sh -s account-service,transaction-service -t dev
+
+# Build all and load to Docker Desktop (for K8s)
+bash Deployment/dockerbuild.sh -t latest -L docker-desktop
+
+# Build for minikube with parallel jobs
+bash Deployment/dockerbuild.sh -t latest -L minikube -j
 ```
 
 ### Cleanup (`Deployment/clearup.sh`)
-- `-n <namespace>`: target namespace.
-- `-F`: delete namespace.
-- `-P`: delete PVC/PV.
-- `-d`: dry-run.
-- `-y`: auto-confirm.
-- `-w`: wait termination.
+### Cleanup (`Deployment/clearup.sh`)
+
+**Flags:**
+- `-n <namespace>`: Target namespace (default: `core-bank`)
+- `-F`: Delete namespace after resources are removed
+- `-P`: Delete persistent storage (PVCs) and related PVs
+- `-d`: Dry run (show actions without executing)
+- `-y`: Auto-confirm (skip interactive prompt)
+- `-w`: Wait for workload termination (and optionally namespace deletion)
+- `-i`: Remove local Docker images for first-party services
+- `-I`: Remove local Docker images including third-party dependencies
+
+**Examples:**
+```bash
+# Remove workloads and manifests only (keep namespace & storage)
+bash Deployment/clearup.sh -n core-bank -y -w
+
+# Full cleanup: workloads + namespace + PVC/PV
+bash Deployment/clearup.sh -n core-bank -F -P -y -w
+
+# Dry-run to preview what will be deleted
+bash Deployment/clearup.sh -n core-bank -d
+
+# Also remove locally built service images
+bash Deployment/clearup.sh -n core-bank -i -y
+
+# Also remove third-party images (e.g., postgres, kafka)
+bash Deployment/clearup.sh -n core-bank -I -y
+```
+
+**Windows (PowerShell) via Git Bash:**
+```powershell
+& "C:\Program Files\Git\bin\bash.exe" Deployment/clearup.sh -n core-bank -F -P -y -w
+```
+
+**Safety Notes:**
+- Deleting PVs (`-P`) is irreversible for local clusters; data will be lost.
+- Use `-d` first if you are unsure; it prints intended actions.
+- Image removal (`-i`/`-I`) affects only local Docker images, not remote registries.
 
 ### Service Discovery on K8s
-Inside the namespace, use service DNS names:
-- `authentication-service:8082`
-- `customer-service:8080`
-- `account-service:8081`
+
+**Inside the cluster (pod-to-pod):**
+- `account-service:8080`
+- `authentication-service:8081`
+- `customer-service:8082`
 - `transaction-service:8083`
 
-Keep env vars consistent across services:
-- `AUTHENTICATION_SERVICE_URL=http://authentication-service:8082`
-- `CUSTOMER_SERVICE_URL=http://customer-service:8080`
-- `ACCOUNT_SERVICE_URL=http://account-service:8081`
+**Environment variables for inter-service communication:**
+- `ACCOUNT_SERVICE_URL=http://account-service:8080`
+- `AUTHENTICATION_SERVICE_URL=http://authentication-service:8081`
+- `CUSTOMER_SERVICE_URL=http://customer-service:8082`
 - `TRANSACTION_SERVICE_URL=http://transaction-service:8083`
+
+**From your local machine (with port-forwards via `-S`):**
+- Account: `http://localhost:18080`
+- Authentication: `http://localhost:18081`
+- Customer: `http://localhost:18082`
+- Transaction: `http://localhost:18083`
 
 ### Network Policies (recommended)
 Add baseline deny-all, allow intra-namespace app ports, and allow egress to data services (Postgres 5432, Redis 6379, Kafka 9092). Place under `K8s/network-policy.yaml` and include in deploy manifests.

@@ -19,6 +19,9 @@ set -euo pipefail
 #   -c               Check images exist in registry before apply
 #   -b               Auto-build missing images using dockerbuild.sh
 #   -L <target>      Load built images to local cluster: 'kind', 'minikube', 'docker-desktop'
+#   -I               Install nginx ingress controller (ingress-nginx) before apply
+#   -G               Port-forward ingress controller to localhost:8080 after deploy
+#   -S               Port-forward core services to localhost:18080-18083 after deploy
 #   -h               Show help
 #
 # Notes:
@@ -30,14 +33,19 @@ print_help() {
   grep '^#' "$0" | sed 's/^# //'
 }
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 NAMESPACE="core-bank"
 AUTO_CONFIRM=false
 WAIT_READY=false
 CHECK_IMAGES=false
 AUTO_BUILD=false
 LOAD_TARGET=""
+INSTALL_INGRESS=false
+PORTFWD_INGRESS=false
+PORTFWD_SERVICES=false
 
-while getopts ":n:ywchbL:" opt; do
+while getopts ":n:ywchbL:IGS" opt; do
   case $opt in
     n) NAMESPACE="$OPTARG" ;;
     y) AUTO_CONFIRM=true ;;
@@ -45,6 +53,9 @@ while getopts ":n:ywchbL:" opt; do
     c) CHECK_IMAGES=true ;;
     b) AUTO_BUILD=true ;;
     L) LOAD_TARGET="$OPTARG" ;;
+    I) INSTALL_INGRESS=true ;;
+    G) PORTFWD_INGRESS=true ;;
+    S) PORTFWD_SERVICES=true ;;
     h) print_help; exit 0 ;;
     :) echo "Missing value for -$OPTARG" >&2; exit 1 ;;
     \?) echo "Invalid option: -$OPTARG" >&2; print_help; exit 1 ;;
@@ -53,6 +64,19 @@ done
 
 shift $((OPTIND-1))
 echo "🚀 Deploying Core Bank services to Kubernetes namespace '$NAMESPACE'..."
+
+# Preflight: verify kubectl can reach a cluster before proceeding
+echo "🔎 Checking Kubernetes cluster connectivity..."
+if ! kubectl cluster-info >/dev/null 2>&1; then
+  current_ctx=$(kubectl config current-context 2>/dev/null || echo "")
+  echo "❌ Unable to reach the Kubernetes API server (context: ${current_ctx:-unknown})." >&2
+  echo "➡️  Tips:" >&2
+  echo "  - Docker Desktop: open Docker Desktop → Settings → Kubernetes → enable it and wait for 'Kubernetes is running'." >&2
+  echo "  - Minikube: run 'minikube start --driver=docker' then 'kubectl config use-context minikube'." >&2
+  echo "  - kind: run 'kind create cluster --name core-bank' then 'kubectl config use-context kind-core-bank'." >&2
+  echo "  - Verify with: 'kubectl get nodes' (should show at least 1 Ready node)." >&2
+  exit 2
+fi
 
 # Check if namespace exists
 if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
@@ -96,6 +120,45 @@ case "$LOAD_TARGET" in
     done
     ;;
 esac
+
+# Optionally install nginx ingress controller (ingress-nginx)
+if $INSTALL_INGRESS; then
+  echo "🔌 Ensuring nginx ingress controller is installed (namespace 'ingress-nginx')..."
+  if ! kubectl get namespace ingress-nginx >/dev/null 2>&1; then
+    echo "Creating namespace 'ingress-nginx'..."
+    kubectl create namespace ingress-nginx
+  else
+    echo "Namespace 'ingress-nginx' already exists."
+  fi
+
+  if command -v helm >/dev/null 2>&1; then
+    if helm status ingress-nginx -n ingress-nginx >/dev/null 2>&1; then
+      echo "✅ ingress-nginx already installed via Helm."
+    else
+      echo "📦 Installing ingress-nginx via Helm..."
+      helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
+      helm repo update || true
+      helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx
+    fi
+  else
+    echo "⚠️  Helm not found. Falling back to kubectl apply of the static manifest."
+    if kubectl -n ingress-nginx get deploy ingress-nginx-controller >/dev/null 2>&1; then
+      echo "✅ ingress-nginx controller already present (kubectl-managed). Skipping re-apply."
+    else
+      echo "🧹 Removing existing admission jobs to avoid immutable field errors..."
+      kubectl -n ingress-nginx delete job ingress-nginx-admission-patch ingress-nginx-admission-create --ignore-not-found || true
+      echo "📄 Applying static manifest for ingress-nginx..."
+      kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+    fi
+  fi
+
+  echo "⏳ Waiting for ingress controller to be ready..."
+  if ! kubectl wait --namespace ingress-nginx --for=condition=Available --timeout=300s deployment/ingress-nginx-controller; then
+    echo "⚠️  Ingress controller did not become ready within timeout. Continuing with deployment." >&2
+  else
+    echo "✅ Ingress controller is ready."
+  fi
+fi
 
 # Optional: check container images referenced in manifests are available
 if $CHECK_IMAGES; then
@@ -307,3 +370,49 @@ if $WAIT_READY; then
 fi
 
 echo "✅ Deployment completed."
+
+# Optional port-forwarding helpers
+if $PORTFWD_INGRESS; then
+  echo "🔗 Starting port-forward: ingress-nginx-controller 8080->80 (namespace ingress-nginx)"
+  mkdir -p "$SCRIPT_DIR/.port-forward"
+  # Kill existing PF if any
+  if [[ -f "$SCRIPT_DIR/.port-forward/ingress.pid" ]]; then
+    oldpid=$(cat "$SCRIPT_DIR/.port-forward/ingress.pid" || true)
+    if [[ -n "${oldpid:-}" ]] && kill -0 "$oldpid" >/dev/null 2>&1; then
+      echo "Stopping existing ingress port-forward (pid $oldpid)"
+      kill "$oldpid" >/dev/null 2>&1 || true
+    fi
+  fi
+  # Start new background PF
+  (kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8080:80 >/dev/null 2>&1 & echo $! > "$SCRIPT_DIR/.port-forward/ingress.pid") || echo "⚠️  Failed to start ingress port-forward"
+  echo "➡️  Test with: curl -H 'Host: account-service.local' http://localhost:8080/health"
+fi
+
+if $PORTFWD_SERVICES; then
+  echo "🔗 Starting port-forward for core services (account/auth/customer/transaction)"
+  mkdir -p "$SCRIPT_DIR/.port-forward"
+  declare -A PF_SERVICES=(
+    [account-service]="18080:8080"
+    [authentication-service]="18081:8081"
+    [customer-service]="18082:8082"
+    [transaction-service]="18083:8083"
+  )
+  for svc in "${!PF_SERVICES[@]}"; do
+    hostmap="${PF_SERVICES[$svc]}"
+    pidfile="$SCRIPT_DIR/.port-forward/${svc}.pid"
+    if [[ -f "$pidfile" ]]; then
+      oldpid=$(cat "$pidfile" || true)
+      if [[ -n "${oldpid:-}" ]] && kill -0 "$oldpid" >/dev/null 2>&1; then
+        echo "Stopping existing port-forward for $svc (pid $oldpid)"
+        kill "$oldpid" >/dev/null 2>&1 || true
+      fi
+    fi
+    echo " - $svc -> $hostmap"
+    (kubectl -n "$NAMESPACE" port-forward svc/"$svc" $hostmap >/dev/null 2>&1 & echo $! > "$pidfile") || echo "⚠️  Failed to start port-forward for $svc"
+  done
+  echo "➡️  Local URLs:"
+  echo "    Account:        http://localhost:18080/health"
+  echo "    Authentication: http://localhost:18081/health"
+  echo "    Customer:       http://localhost:18082/health"
+  echo "    Transaction:    http://localhost:18083/health"
+fi

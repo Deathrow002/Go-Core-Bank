@@ -8,31 +8,31 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8082",
+      "value": "http://localhost:18082",
       "type": "string",
       "description": "Base URL for Customer Service"
     },
     {
       "key": "authServiceUrl",
-      "value": "http://localhost:8081",
+      "value": "http://localhost:18081",
       "type": "string",
       "description": "Base URL for Authentication Service"
     },
     {
       "key": "accountServiceUrl",
-      "value": "http://localhost:8080",
+      "value": "http://localhost:18080",
       "type": "string",
       "description": "Base URL for Account Service"
     },
     {
       "key": "transactionServiceUrl",
-      "value": "http://localhost:8083",
+      "value": "http://localhost:18083",
       "type": "string",
       "description": "Base URL for Transaction Service"
     },
     {
       "key": "gatewayUrl",
-      "value": "http://localhost",
+      "value": "http://localhost:8080",
       "type": "string",
       "description": "API Gateway URL (Nginx)"
     },
